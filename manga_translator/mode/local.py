@@ -59,6 +59,9 @@ def force_cleanup():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
+    # Apple Silicon MPS 内存清理
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()
     
     # 尝试清理更多内存  
     try:

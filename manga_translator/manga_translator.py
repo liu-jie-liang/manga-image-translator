@@ -288,6 +288,7 @@ class MangaTranslator:
         # check mps for apple silicon or cuda for nvidia
         device = 'mps' if torch.backends.mps.is_available() else 'cuda'
         self.device = device if params.get('use_gpu', False) else 'cpu'
+        logger.info(f"Device: {self.device}")
         self._gpu_limited_memory = params.get('use_gpu_limited', False)
         if self._gpu_limited_memory and not self.using_gpu:
             self.device = device
@@ -709,6 +710,9 @@ class MangaTranslator:
                 await unload_translation(model)
         if torch.cuda.is_available():
             torch.cuda.empty_cache()  # empty CUDA cache
+        # Apple Silicon MPS memory cleanup
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
 
     # Background models cleanup job.
     async def _detector_cleanup_job(self):
