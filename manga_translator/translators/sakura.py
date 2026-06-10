@@ -10,7 +10,7 @@ import asyncio
 from typing import List, Dict, Callable, Tuple
 
 from .common import CommonTranslator
-from .keys import SAKURA_API_BASE, SAKURA_VERSION, SAKURA_DICT_PATH
+from .keys import SAKURA_API_BASE, SAKURA_VERSION, SAKURA_DICT_PATH, SAKURA_MODEL
 
 import logging
 
@@ -512,11 +512,6 @@ class SakuraTranslator(CommonTranslator):
         raw_lenth = len(raw_text)
         max_lenth = 512
         max_token_num = max(raw_lenth*2, max_lenth)
-        extra_query = {
-            'do_sample': False,
-            'num_beams': 1,
-            'repetition_penalty': 1.0,
-        }
         if SAKURA_VERSION == "0.9":
             messages = [
                 {
@@ -542,14 +537,12 @@ class SakuraTranslator(CommonTranslator):
                 }
             ]
         response = await self.client.chat.completions.create(
-            model="sukinishiro",
+            model=SAKURA_MODEL,
             messages=messages,
             temperature=self.temperature,
             top_p=self.top_p,
             max_tokens=max_token_num,
             frequency_penalty=self.frequency_penalty,
-            seed=-1,
-            extra_query=extra_query,
         )
         # 提取并返回响应文本
         for choice in response.choices:

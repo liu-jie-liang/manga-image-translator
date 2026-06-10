@@ -20,6 +20,7 @@ from .selective import SelectiveOfflineTranslator, prepare as prepare_selective_
 from .none import NoneTranslator
 from .original import OriginalTranslator
 from .sakura import SakuraTranslator
+from .sakura_local import SakuraLocalTranslator
 from .qwen2 import Qwen2Translator, Qwen2BigTranslator
 from .groq import GroqTranslator
 from .gemini import GeminiTranslator
@@ -62,7 +63,7 @@ TRANSLATORS = {
     Translator.caiyun: CaiyunTranslator,
     Translator.none: NoneTranslator,
     Translator.original: OriginalTranslator,
-    Translator.sakura: SakuraTranslator,
+    Translator.sakura: lambda: SakuraLocalTranslator() if SakuraLocalTranslator._use_local() else SakuraTranslator(),
     **GPT_TRANSLATORS,
     **OFFLINE_TRANSLATORS,
 }
