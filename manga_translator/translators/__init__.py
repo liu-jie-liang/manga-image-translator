@@ -13,6 +13,9 @@ from .caiyun import CaiyunTranslator
 from .chatgpt import OpenAITranslator
 from .chatgpt_2stage import ChatGPT2StageTranslator
 from .nllb import NLLBTranslator, NLLBBigTranslator
+
+# 最近一次翻译的 token usage 缓存，供 benchmark 模块读取
+_last_translation_usage = None
 from .sugoi import JparacrawlTranslator, JparacrawlBigTranslator, SugoiTranslator
 from .m2m100 import M2M100Translator, M2M100BigTranslator
 from .mbart50 import MBart50Translator
@@ -88,6 +91,8 @@ async def prepare(chain: TranslatorChain):
 
 # TODO: Optionally take in strings instead of TranslatorChain for simplicity
 async def dispatch(chain: TranslatorChain, queries: List[str], translator_config: Optional[TranslatorConfig] = None, use_mtpe: bool = False, args:Optional[Context] = None, device: str = 'cpu') -> List[str]:
+    global _last_translation_usage
+    _last_translation_usage = None
     if not queries:
         return queries
 
@@ -109,6 +114,8 @@ async def dispatch(chain: TranslatorChain, queries: List[str], translator_config
                 queries = await translator.translate('auto', chain.langs[flag], queries, args)
             else:
                 queries = await translator.translate('auto', chain.langs[flag], queries, use_mtpe)
+            if hasattr(translator, '_last_usage') and translator._last_usage:
+                _last_translation_usage = translator._last_usage
             await translator.unload(device)
             flag+=1
         return queries
@@ -124,6 +131,8 @@ async def dispatch(chain: TranslatorChain, queries: List[str], translator_config
             queries = await translator.translate('auto', tgt_lang, queries, args)
         else:
             queries = await translator.translate('auto', tgt_lang, queries, use_mtpe)
+        if hasattr(translator, '_last_usage') and translator._last_usage:
+            _last_translation_usage = translator._last_usage
         if args is not None:
             args['translations'][tgt_lang] = queries
     return queries

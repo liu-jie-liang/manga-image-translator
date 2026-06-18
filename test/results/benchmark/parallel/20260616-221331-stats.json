@@ -1,0 +1,133 @@
+{
+  "speed": {
+    "session_elapsed": 744.176,
+    "total_pages": 158,
+    "successful_pages": 158,
+    "failed_pages": 0,
+    "pages_per_minute": 12.74,
+    "avg_page_time": 4.71,
+    "stages": {
+      "detection": {
+        "count": 158,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "ocr": {
+        "count": 158,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "translation": {
+        "count": 158,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "inpainting": {
+        "count": 158,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "rendering": {
+        "count": 158,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      }
+    },
+    "total": {
+      "count": 158,
+      "sum": 1130.143,
+      "avg": 7.153,
+      "min": 0.36,
+      "max": 41.702,
+      "std": 3.727,
+      "cv": 0.521,
+      "p50": 6.704,
+      "p90": 10.443,
+      "p95": 11.429,
+      "p99": 14.087
+    },
+    "token": {
+      "total_prompt_tokens": 0,
+      "total_completion_tokens": 0,
+      "total_tokens": 0,
+      "tokens_per_second": 0
+    }
+  },
+  "quality": {
+    "translation_coverage": {
+      "count": 158,
+      "sum": 158.0,
+      "avg": 1.0,
+      "min": 1.0,
+      "max": 1.0,
+      "std": 0.0,
+      "cv": 0.0,
+      "p50": 1.0,
+      "p90": 1.0,
+      "p95": 1.0,
+      "p99": 1.0
+    },
+    "avg_ocr_text_count": 0.0,
+    "avg_translated_text_count": 0.0
+  },
+  "stability": {
+    "error_rate": 0.0,
+    "failed_count": 0,
+    "retried_pages": 0,
+    "total_retries": 0,
+    "outliers": {
+      "total": [
+        {
+          "index": 3,
+          "value": 14.754,
+          "page": "004.jpg"
+        },
+        {
+          "index": 156,
+          "value": 41.702,
+          "page": "157.jpg"
+        }
+      ]
+    }
+  }
+}

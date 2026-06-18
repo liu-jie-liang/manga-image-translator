@@ -1,0 +1,165 @@
+{
+  "speed": {
+    "session_elapsed": 1212.393,
+    "total_pages": 158,
+    "successful_pages": 158,
+    "failed_pages": 0,
+    "pages_per_minute": 7.82,
+    "avg_page_time": 7.673,
+    "stages": {
+      "detection": {
+        "count": 158,
+        "sum": 254.602,
+        "avg": 1.611,
+        "min": 0.287,
+        "max": 3.032,
+        "std": 0.385,
+        "cv": 0.239,
+        "p50": 1.585,
+        "p90": 2.022,
+        "p95": 2.278,
+        "p99": 2.759
+      },
+      "ocr": {
+        "count": 158,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      },
+      "translation": {
+        "count": 158,
+        "sum": 955.917,
+        "avg": 6.05,
+        "min": 0.0,
+        "max": 15.896,
+        "std": 1.724,
+        "cv": 0.285,
+        "p50": 5.83,
+        "p90": 7.158,
+        "p95": 7.649,
+        "p99": 14.601
+      },
+      "inpainting": {
+        "count": 158,
+        "sum": 260.483,
+        "avg": 1.649,
+        "min": 0.0,
+        "max": 1.809,
+        "std": 0.268,
+        "cv": 0.163,
+        "p50": 1.689,
+        "p90": 1.728,
+        "p95": 1.741,
+        "p99": 1.759
+      },
+      "rendering": {
+        "count": 158,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
+      }
+    },
+    "total": {
+      "count": 158,
+      "sum": 98101.455,
+      "avg": 620.895,
+      "min": 263.781,
+      "max": 959.566,
+      "std": 193.539,
+      "cv": 0.312,
+      "p50": 621.031,
+      "p90": 885.267,
+      "p95": 920.173,
+      "p99": 954.042
+    },
+    "token": {
+      "total_prompt_tokens": 0,
+      "total_completion_tokens": 0,
+      "total_tokens": 0,
+      "tokens_per_second": 0.0
+    }
+  },
+  "quality": {
+    "translation_coverage": {
+      "count": 158,
+      "sum": 158.0,
+      "avg": 1.0,
+      "min": 1.0,
+      "max": 1.0,
+      "std": 0.0,
+      "cv": 0.0,
+      "p50": 1.0,
+      "p90": 1.0,
+      "p95": 1.0,
+      "p99": 1.0
+    },
+    "avg_ocr_text_count": 0.0,
+    "avg_translated_text_count": 0.0
+  },
+  "stability": {
+    "error_rate": 0.0,
+    "failed_count": 0,
+    "retried_pages": 0,
+    "total_retries": 0,
+    "outliers": {
+      "detection": [
+        {
+          "index": 53,
+          "value": 2.393,
+          "page": "054.jpg"
+        },
+        {
+          "index": 147,
+          "value": 2.42,
+          "page": "148.jpg"
+        },
+        {
+          "index": 151,
+          "value": 2.748,
+          "page": "152.jpg"
+        },
+        {
+          "index": 155,
+          "value": 2.774,
+          "page": "156.jpg"
+        },
+        {
+          "index": 156,
+          "value": 3.032,
+          "page": "157.jpg"
+        }
+      ],
+      "translation": [
+        {
+          "index": 3,
+          "value": 15.896,
+          "page": "004.jpg"
+        },
+        {
+          "index": 11,
+          "value": 14.441,
+          "page": "012.jpg"
+        },
+        {
+          "index": 123,
+          "value": 14.812,
+          "page": "124.jpg"
+        }
+      ]
+    }
+  }
+}

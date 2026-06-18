@@ -1,0 +1,1 @@
+page_index,image_name,detection_elapsed,ocr_elapsed,translation_elapsed,inpainting_elapsed,rendering_elapsed,total_elapsed,ocr_text_count,translated_text_count,prompt_tokens,completion_tokens,error,retry_count,judge_score

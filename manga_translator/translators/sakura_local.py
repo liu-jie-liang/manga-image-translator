@@ -46,6 +46,7 @@ class SakuraLocalTranslator(CommonTranslator):
         super().__init__()
         self.temperature = 0.3
         self.top_p = 0.3
+        self._last_usage = None  # 存储最近一次翻译的 token usage
 
     # ================================================================
     # 环境变量 → 方式选择
@@ -199,6 +200,13 @@ class SakuraLocalTranslator(CommonTranslator):
         except Exception as e:
             logger.error(f'SakuraLocal 推理失败: {e}')
             raise
+
+        # 捕获 token usage 供基准测试使用
+        if 'usage' in result:
+            self._last_usage = {
+                'prompt_tokens': result['usage'].get('prompt_tokens', 0),
+                'completion_tokens': result['usage'].get('completion_tokens', 0),
+            }
 
         response = result['choices'][0]['message']['content']
         logger.debug('-- SakuraLocal Response --\n' + response + '\n\n')

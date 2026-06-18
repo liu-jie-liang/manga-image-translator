@@ -235,6 +235,7 @@ class SakuraTranslator(CommonTranslator):
         self._emoji_pattern = re.compile(r'[\U00010000-\U0010ffff]')
         self._heart_pattern = re.compile(r'❤')
         self.sakura_dict = SakuraDict(self.get_dict_path(), self.logger, SAKURA_VERSION)
+        self._last_usage = None  # 存储最近一次翻译的 token usage
 
     def get_sakura_version(self):
         return SAKURA_VERSION
@@ -496,7 +497,7 @@ class SakuraTranslator(CommonTranslator):
                 server_error_attempt += 1
                 if server_error_attempt >= self._RETRY_ATTEMPTS:
                     self.logger.error(f'Sakura API请求失败。错误信息： {e}')
-                    return prompt
+                    return '\n'.join(prompt) if isinstance(prompt, list) else prompt
                 self.logger.warning(f'Sakura因服务器错误而进行重试。尝试次数： {server_error_attempt}，错误信息： {e}')
 
         return response
@@ -544,6 +545,12 @@ class SakuraTranslator(CommonTranslator):
             max_tokens=max_token_num,
             frequency_penalty=self.frequency_penalty,
         )
+        # 捕获 token usage 供基准测试使用
+        if hasattr(response, 'usage') and response.usage:
+            self._last_usage = {
+                'prompt_tokens': response.usage.prompt_tokens,
+                'completion_tokens': response.usage.completion_tokens,
+            }
         # 提取并返回响应文本
         for choice in response.choices:
             if 'text' in choice:

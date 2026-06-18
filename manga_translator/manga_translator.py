@@ -26,6 +26,7 @@ from .utils import (
     is_valuable_text,
     sort_regions,
 )
+from .benchmark import benchmark_context
 
 from .detection import dispatch as dispatch_detection, prepare as prepare_detection, unload as unload_detection
 from .upscaling import dispatch as dispatch_upscaling, prepare as prepare_upscaling, unload as unload_upscaling
@@ -400,17 +401,8 @@ class MangaTranslator:
                 logger.error(f"Error saving input.png debug image: {e}")
                 logger.debug(f"Exception details: {traceback.format_exc()}")
 
-        # preload and download models (not strictly necessary, remove to lazy load)
-        if ( self.models_ttl == 0 ):
-            logger.info('Loading models')
-            if config.upscale.upscale_ratio:
-                await prepare_upscaling(config.upscale.upscaler)
-            await prepare_detection(config.detector.detector)
-            await prepare_ocr(config.ocr.ocr, self.device)
-            await prepare_inpainting(config.inpainter.inpainter, self.device)
-            await prepare_translation(config.translator.translator_gen)
-            if config.colorizer.colorizer != Colorizer.none:
-                await prepare_colorization(config.colorizer.colorizer)
+        # 模型生命周期由 batch.py 管理，不在 translate() 中自动加载
+        logger.info('Skipping download of models')
 
         # translate
         ctx = await self._translate(config, ctx)
@@ -431,9 +423,7 @@ class MangaTranslator:
         return ctx
 
     async def _translate(self, config: Config, ctx: Context) -> Context:
-        # Start the background cleanup job once if not already started.
-        if self._detector_cleanup_task is None:
-            self._detector_cleanup_task = asyncio.create_task(self._detector_cleanup_job())
+        # 模型生命周期由 batch.py 管理，不启动后台清理任务
         # -- Colorization
         if config.colorizer.colorizer != Colorizer.none:
             await self._report_progress('colorizing')
@@ -467,6 +457,7 @@ class MangaTranslator:
 
         # -- Detection
         await self._report_progress('detection')
+        _t0 = time.time()
         try:
             ctx.textlines, ctx.mask_raw, ctx.mask = await self._run_detection(config, ctx)
         except Exception as e:  
@@ -476,6 +467,9 @@ class MangaTranslator:
             ctx.textlines = [] 
             ctx.mask_raw = None
             ctx.mask = None
+        if benchmark_context._active_page:
+            _dt = time.time() - _t0
+            benchmark_context.record_stage("detection", _dt, _t0, time.time())
 
         if self.verbose and ctx.mask_raw is not None:
             cv2.imwrite(self._result_path('mask_raw.png'), ctx.mask_raw)
@@ -494,6 +488,7 @@ class MangaTranslator:
 
         # -- OCR
         await self._report_progress('ocr')
+        _t0 = time.time()
         try:
             ctx.textlines = await self._run_ocr(config, ctx)
         except Exception as e:  
@@ -501,6 +496,10 @@ class MangaTranslator:
             if not self.ignore_errors:  
                 raise 
             ctx.textlines = [] # Fallback to empty textlines if OCR fails
+        if benchmark_context._active_page:
+            _dt = time.time() - _t0
+            benchmark_context.record_stage("ocr", _dt, _t0, time.time())
+            benchmark_context._active_page.ocr_text_count = len([t for t in ctx.textlines if t.text])
 
         if not ctx.textlines:
             await self._report_progress('skip-no-text', True)
@@ -542,6 +541,8 @@ class MangaTranslator:
             
         # -- Translation
         await self._report_progress('translating')
+        _t1 = time.time()
+        _translations_ttfb = None
         try:
             ctx.text_regions = await self._run_text_translation(config, ctx)
         except Exception as e:  
@@ -549,6 +550,16 @@ class MangaTranslator:
             if not self.ignore_errors:  
                 raise 
             ctx.text_regions = [] # Fallback to empty text_regions if translation fails
+        if benchmark_context._active_page:
+            _dt = time.time() - _t1
+            benchmark_context.record_stage("translation", _dt, _t1, time.time())
+            from .translators import _last_translation_usage
+            if _last_translation_usage:
+                benchmark_context._active_page.prompt_tokens = _last_translation_usage.get('prompt_tokens', 0)
+                benchmark_context._active_page.completion_tokens = _last_translation_usage.get('completion_tokens', 0)
+            benchmark_context._active_page.translated_text_count = sum(
+                1 for r in ctx.text_regions if hasattr(r, 'translation') and r.translation
+            )
 
         await self._report_progress('after-translating')
 
@@ -581,6 +592,7 @@ class MangaTranslator:
 
         # -- Inpainting
         await self._report_progress('inpainting')
+        _t0 = time.time()
         try:
             ctx.img_inpainted = await self._run_inpainting(config, ctx)
         except Exception as e:  
@@ -589,6 +601,9 @@ class MangaTranslator:
                 raise
             else:
                 ctx.img_inpainted = ctx.img_rgb
+        if benchmark_context._active_page:
+            _dt = time.time() - _t0
+            benchmark_context.record_stage("inpainting", _dt, _t0, time.time())
         ctx.gimp_mask = np.dstack((cv2.cvtColor(ctx.img_inpainted, cv2.COLOR_RGB2BGR), ctx.mask))
 
         if self.verbose:
@@ -609,6 +624,7 @@ class MangaTranslator:
             # 发送特殊格式的消息，前端可以解析
             await self._report_progress(f'rendering_folder:{folder_name}')
 
+        _t0 = time.time()
         try:
             ctx.img_rendered = await self._run_text_rendering(config, ctx)
         except Exception as e:
@@ -616,6 +632,9 @@ class MangaTranslator:
             if not self.ignore_errors:
                 raise
             ctx.img_rendered = ctx.img_inpainted # Fallback to inpainted (or original RGB) image if rendering fails
+        if benchmark_context._active_page:
+            _dt = time.time() - _t0
+            benchmark_context.record_stage("rendering", _dt, _t0, time.time())
 
         await self._report_progress('finished', True)
         ctx.result = dump_image(ctx.input, ctx.img_rendered, ctx.img_alpha)
@@ -1682,21 +1701,8 @@ class MangaTranslator:
                 logger.error(f"Error saving input.png debug image: {e}")
                 logger.debug(f"Exception details: {traceback.format_exc()}")
 
-        # preload and download models (not strictly necessary, remove to lazy load)
-        if ( self.models_ttl == 0 ):
-            logger.info('Loading models')
-            if config.upscale.upscale_ratio:
-                await prepare_upscaling(config.upscale.upscaler)
-            await prepare_detection(config.detector.detector)
-            await prepare_ocr(config.ocr.ocr, self.device)
-            await prepare_inpainting(config.inpainter.inpainter, self.device)
-            await prepare_translation(config.translator.translator_gen)
-            if config.colorizer.colorizer != Colorizer.none:
-                await prepare_colorization(config.colorizer.colorizer)
-
-        # Start the background cleanup job once if not already started.
-        if self._detector_cleanup_task is None:
-            self._detector_cleanup_task = asyncio.create_task(self._detector_cleanup_job())
+        # 模型生命周期由 batch.py 管理，不在 translate_batch() 中自动加载
+        logger.info('Skipping download of models')
 
         # -- Colorization
         if config.colorizer.colorizer != Colorizer.none:
@@ -1728,6 +1734,7 @@ class MangaTranslator:
 
         # -- Detection
         await self._report_progress('detection')
+        _t0 = time.time()
         try:
             ctx.textlines, ctx.mask_raw, ctx.mask = await self._run_detection(config, ctx)
         except Exception as e:  
@@ -1737,6 +1744,9 @@ class MangaTranslator:
             ctx.textlines = [] 
             ctx.mask_raw = None
             ctx.mask = None
+        if benchmark_context._active_page:
+            _dt = time.time() - _t0
+            benchmark_context.record_stage("detection", _dt, _t0, time.time())
 
         if self.verbose and ctx.mask_raw is not None:
             cv2.imwrite(self._result_path('mask_raw.png'), ctx.mask_raw)

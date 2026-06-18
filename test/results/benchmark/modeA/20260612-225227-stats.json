@@ -1,0 +1,236 @@
+{
+  "speed": {
+    "session_elapsed": 958.881,
+    "total_pages": 158,
+    "successful_pages": 158,
+    "failed_pages": 0,
+    "pages_per_minute": 9.89,
+    "avg_page_time": 6.069,
+    "stages": {
+      "detection": {
+        "count": 158,
+        "sum": 43.481,
+        "avg": 0.275,
+        "min": 0.261,
+        "max": 0.696,
+        "std": 0.034,
+        "cv": 0.124,
+        "p50": 0.273,
+        "p90": 0.278,
+        "p95": 0.283,
+        "p99": 0.295
+      },
+      "ocr": {
+        "count": 158,
+        "sum": 123.249,
+        "avg": 0.78,
+        "min": 0.0,
+        "max": 2.427,
+        "std": 0.374,
+        "cv": 0.48,
+        "p50": 0.687,
+        "p90": 1.241,
+        "p95": 1.421,
+        "p99": 2.081
+      },
+      "translation": {
+        "count": 158,
+        "sum": 411.116,
+        "avg": 2.602,
+        "min": 0.0,
+        "max": 22.351,
+        "std": 2.731,
+        "cv": 1.05,
+        "p50": 2.018,
+        "p90": 4.286,
+        "p95": 5.241,
+        "p99": 17.353
+      },
+      "inpainting": {
+        "count": 158,
+        "sum": 245.93,
+        "avg": 1.557,
+        "min": 0.0,
+        "max": 1.764,
+        "std": 0.254,
+        "cv": 0.163,
+        "p50": 1.586,
+        "p90": 1.643,
+        "p95": 1.658,
+        "p99": 1.689
+      },
+      "rendering": {
+        "count": 158,
+        "sum": 8.498,
+        "avg": 0.054,
+        "min": 0.0,
+        "max": 0.252,
+        "std": 0.035,
+        "cv": 0.654,
+        "p50": 0.049,
+        "p90": 0.09,
+        "p95": 0.104,
+        "p99": 0.173
+      }
+    },
+    "total": {
+      "count": 158,
+      "sum": 832.274,
+      "avg": 5.268,
+      "min": 0.267,
+      "max": 25.398,
+      "std": 3.019,
+      "cv": 0.573,
+      "p50": 4.666,
+      "p90": 7.321,
+      "p95": 8.822,
+      "p99": 20.372
+    },
+    "token": {
+      "total_prompt_tokens": 19222,
+      "total_completion_tokens": 7684,
+      "total_tokens": 26906,
+      "tokens_per_second": 18.69
+    }
+  },
+  "quality": {
+    "translation_coverage": {
+      "count": 158,
+      "sum": 85.332,
+      "avg": 0.54,
+      "min": 0.0,
+      "max": 1.0,
+      "std": 0.206,
+      "cv": 0.381,
+      "p50": 0.5,
+      "p90": 1.0,
+      "p95": 1.0,
+      "p99": 1.0
+    },
+    "avg_ocr_text_count": 10.4,
+    "avg_translated_text_count": 4.8
+  },
+  "stability": {
+    "error_rate": 0.0,
+    "failed_count": 0,
+    "retried_pages": 0,
+    "total_retries": 0,
+    "outliers": {
+      "detection": [
+        {
+          "index": 0,
+          "value": 0.696,
+          "page": "001.jpg"
+        }
+      ],
+      "ocr": [
+        {
+          "index": 91,
+          "value": 1.61,
+          "page": "092.jpg"
+        },
+        {
+          "index": 146,
+          "value": 1.613,
+          "page": "147.jpg"
+        },
+        {
+          "index": 147,
+          "value": 1.766,
+          "page": "148.jpg"
+        },
+        {
+          "index": 151,
+          "value": 1.964,
+          "page": "152.jpg"
+        },
+        {
+          "index": 152,
+          "value": 1.593,
+          "page": "153.jpg"
+        },
+        {
+          "index": 155,
+          "value": 2.237,
+          "page": "156.jpg"
+        },
+        {
+          "index": 156,
+          "value": 2.427,
+          "page": "157.jpg"
+        }
+      ],
+      "translation": [
+        {
+          "index": 3,
+          "value": 18.837,
+          "page": "004.jpg"
+        },
+        {
+          "index": 11,
+          "value": 22.351,
+          "page": "012.jpg"
+        },
+        {
+          "index": 123,
+          "value": 8.631,
+          "page": "124.jpg"
+        },
+        {
+          "index": 139,
+          "value": 16.233,
+          "page": "140.jpg"
+        }
+      ],
+      "rendering": [
+        {
+          "index": 0,
+          "value": 0.252,
+          "page": "001.jpg"
+        },
+        {
+          "index": 3,
+          "value": 0.139,
+          "page": "004.jpg"
+        },
+        {
+          "index": 91,
+          "value": 0.127,
+          "page": "092.jpg"
+        },
+        {
+          "index": 155,
+          "value": 0.217,
+          "page": "156.jpg"
+        },
+        {
+          "index": 157,
+          "value": 0.14,
+          "page": "158.jpg"
+        }
+      ],
+      "total": [
+        {
+          "index": 3,
+          "value": 22.013,
+          "page": "004.jpg"
+        },
+        {
+          "index": 11,
+          "value": 25.398,
+          "page": "012.jpg"
+        },
+        {
+          "index": 123,
+          "value": 11.838,
+          "page": "124.jpg"
+        },
+        {
+          "index": 139,
+          "value": 19.135,
+          "page": "140.jpg"
+        }
+      ]
+    }
+  }
+}

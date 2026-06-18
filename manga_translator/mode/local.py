@@ -13,11 +13,86 @@ from ..save import save_result
 from ..translators import (
     LanguageUnsupportedException,
     dispatch as dispatch_translation,
+    Translator,
+    TranslatorConfig,
 )
 from ..utils import natural_sort, replace_prefix, get_color_name, rgb2hex, get_logger
 
 # 使用专用的local logger
 logger = get_logger('local')
+
+# 支持的图片扩展名
+IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff', '.tif', '.gif'}
+
+# 进度文件名
+PROGRESS_FILE = '.translate_progress.json'
+
+
+def _get_image_files(path: str) -> List[str]:
+    """获取目录下当前层级的图片文件列表（不递归子目录）。
+    
+    跳过：子目录、非图片文件、.thumb、.translate_progress.json。
+    """
+    if not os.path.isdir(path):
+        return []
+    entries = os.listdir(path)
+    files = []
+    for entry in entries:
+        full_path = os.path.join(path, entry)
+        # 跳过子目录
+        if os.path.isdir(full_path):
+            continue
+        # 跳过 .thumb
+        if entry.lower() == '.thumb':
+            continue
+        # 跳过进度文件
+        if entry == PROGRESS_FILE:
+            continue
+        # 跳过非图片扩展名
+        ext = os.path.splitext(entry)[1].lower()
+        if ext not in IMAGE_EXTS:
+            continue
+        # 验证可以被PIL打开
+        try:
+            img = Image.open(full_path)
+            img.verify()
+        except Exception:
+            logger.warning(f'Failed to open image: {full_path}')
+            continue
+        files.append(entry)
+    return natural_sort(files)
+
+
+def _load_progress(path: str) -> set:
+    """从目录中加载已完成翻译的图片文件名集合。"""
+    progress_path = os.path.join(path, PROGRESS_FILE)
+    if not os.path.exists(progress_path):
+        return set()
+    try:
+        with open(progress_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return set(data.get('completed', []))
+    except Exception:
+        logger.warning(f'Failed to read progress file: {progress_path}')
+        return set()
+
+
+def _save_progress(path: str, filename: str):
+    """记录一张已完成翻译的图片到进度文件。"""
+    progress_path = os.path.join(path, PROGRESS_FILE)
+    completed = _load_progress(path)
+    completed.add(filename)
+    # 按文件名排序存储
+    data = {'completed': sorted(completed)}
+    with open(progress_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _clear_progress(path: str):
+    """删除目录下的进度文件（retrans）。"""
+    progress_path = os.path.join(path, PROGRESS_FILE)
+    if os.path.exists(progress_path):
+        os.remove(progress_path)
 
 # 提示音开关
 ENABLE_COMPLETION_SOUND = True
@@ -119,6 +194,13 @@ class MangaTranslatorLocal(MangaTranslator):
             config = Config(**config_dict)
         else:
             config = Config()
+        # Override translator from params if provided (for batch mode)
+        translator_param = params.get('translator')
+        if translator_param:
+            if isinstance(translator_param, str):
+                config.translator.translator = Translator(translator_param)
+            elif isinstance(translator_param, dict):
+                config.translator = TranslatorConfig(**translator_param)
         # Handle format
         file_ext = params.get('format')
         if params.get('save_quality', 100) < 100:
@@ -152,32 +234,43 @@ class MangaTranslatorLocal(MangaTranslator):
             _dest = dest or path + '-translated'
             if os.path.exists(_dest) and not os.path.isdir(_dest):
                 raise FileExistsError(_dest)
+            os.makedirs(_dest, exist_ok=True)
+
+            # 处理 retrans 参数：清空进度文件
+            if params.get('retrans'):
+                _clear_progress(path)
+                logger.info('Retrans mode: cleared progress for directory')
 
             # 检查是否使用批量处理
             if self.batch_size > 1:
                 await self._translate_folder_batch(path, _dest, params, config, file_ext)
             else:
-                # 原有的逐个处理方式
-                start_time = time.time()  # 记录开始时间
+                # 非递归处理当前目录下的图片文件
+                start_time = time.time()
                 translated_count = 0
-                for root, subdirs, files in os.walk(path):
-                    files = natural_sort(files)
-                    dest_root = replace_prefix(root, path, _dest)
-                    os.makedirs(dest_root, exist_ok=True)
-                    for f in files:
-                        if f.lower() == '.thumb':
-                            continue
+                image_files = _get_image_files(path)
 
-                        file_path = os.path.join(root, f)
-                        output_dest = replace_prefix(file_path, path, _dest)
-                        p, ext = os.path.splitext(output_dest)
-                        output_dest = f'{p}.{file_ext or ext[1:]}'
-                        try:
-                            if await self.translate_file(file_path, output_dest, params, config):
-                                translated_count += 1
-                        except Exception as e:
-                            logger.error(e)
-                            raise e
+                # 加载已完成进度，过滤已完成图片
+                completed = _load_progress(path) if not params.get('retrans') else set()
+                pending_files = [f for f in image_files if f not in completed]
+
+                if not pending_files:
+                    logger.info('No images found to translate in this directory.')
+                else:
+                    logger.info(f'Found {len(image_files)} images, {len(pending_files)} pending translation')
+
+                for f in pending_files:
+                    file_path = os.path.join(path, f)
+                    p, ext = os.path.splitext(f)
+                    output_dest = os.path.join(_dest, f'{p}.{file_ext or ext[1:]}')
+                    try:
+                        if await self.translate_file(file_path, output_dest, params, config):
+                            translated_count += 1
+                            # 每翻译成功一张就记录进度
+                            _save_progress(path, f)
+                    except Exception as e:
+                        logger.error(e)
+                        raise e
                 
                 # 计算总耗时
                 total_time = time.time() - start_time
@@ -331,7 +424,7 @@ class MangaTranslatorLocal(MangaTranslator):
             f.write(s)
 
     async def _translate_folder_batch(self, path: str, dest: str, params: dict, config: Config, file_ext: str):
-        """使用批量处理方式翻译文件夹中的图片"""
+        """使用批量处理方式翻译文件夹中的图片（非递归）"""
         
         start_time = time.time()  # 记录开始时间
         memory_percent, available_mb = safe_get_memory_info()
@@ -343,36 +436,40 @@ class MangaTranslatorLocal(MangaTranslator):
         else:
             logger.info('Memory optimization enabled')
         
+        # 获取当前目录下的图片文件
+        image_files = _get_image_files(path)
+        
+        # 加载已完成进度，过滤已完成图片
+        completed = _load_progress(path) if not params.get('retrans') else set()
+        pending = [f for f in image_files if f not in completed]
+        
+        if not pending:
+            logger.info('No images found to translate in this directory.')
+            return
+        
+        logger.info(f'Found {len(image_files)} images, {len(pending)} pending translation')
+        
         # 收集所有需要翻译的图片文件
         image_tasks = []
-        for root, subdirs, files in os.walk(path):
-            files = natural_sort(files)
-            dest_root = replace_prefix(root, path, dest)
-            os.makedirs(dest_root, exist_ok=True)
+        for f in pending:
+            file_path = os.path.join(path, f)
+            p, ext = os.path.splitext(f)
+            output_dest = os.path.join(dest, f'{p}.{file_ext or ext[1:]}')
             
-            for f in files:
-                if f.lower() == '.thumb':
-                    continue
-                    
-                file_path = os.path.join(root, f)
-                output_dest = replace_prefix(file_path, path, dest)
-                p, ext = os.path.splitext(output_dest)
-                output_dest = f'{p}.{file_ext or ext[1:]}'
+            # 检查是否需要跳过已翻译的文件
+            if not params.get('overwrite') and os.path.exists(output_dest):
+                logger.debug(f'Skipping already translated file: "{output_dest}"')
+                continue
                 
-                # 检查是否需要跳过已翻译的文件
-                if not params.get('overwrite') and os.path.exists(output_dest):
-                    logger.debug(f'Skipping already translated file: "{output_dest}"')
-                    continue
-                    
-                # 尝试加载图片
-                try:
-                    img = Image.open(file_path)
-                    img.verify()
-                    img = Image.open(file_path)  # 重新打开因为verify会关闭文件
-                    image_tasks.append((img, config, file_path, output_dest))
-                except Exception as e:
-                    logger.warning(f'Failed to open image: {file_path}, error: {e}')
-                    continue
+            # 尝试加载图片
+            try:
+                img = Image.open(file_path)
+                img.verify()
+                img = Image.open(file_path)  # 重新打开因为verify会关闭文件
+                image_tasks.append((img, config, file_path, output_dest, f))
+            except Exception as e:
+                logger.warning(f'Failed to open image: {file_path}, error: {e}')
+                continue
         
         if not image_tasks:
             logger.info('No images found to translate, use --overwrite to write over existing translations.')
@@ -412,9 +509,9 @@ class MangaTranslatorLocal(MangaTranslator):
                 batch_config = copy.deepcopy(config)
                 
                 # 更新批次中的配置
-                images_with_configs = [(img, batch_config) for img, _, _, _ in batch]
+                images_with_configs = [(img, batch_config) for img, _, _, _, _ in batch]
             else:
-                images_with_configs = [(img, config) for img, _, _, _ in batch]
+                images_with_configs = [(img, config) for img, _, _, _, _ in batch]
             
             try:
                 # 批量翻译
@@ -423,7 +520,7 @@ class MangaTranslatorLocal(MangaTranslator):
                 batch_results = await self.translate_batch(images_with_configs, len(batch))
                 
                 # 保存结果
-                for j, (ctx, (img, _, file_path, output_dest)) in enumerate(zip(batch_results, batch)):
+                for j, (ctx, (img, _, file_path, output_dest, src_filename)) in enumerate(zip(batch_results, batch)):
                     # 检查是否应该跳过没有文本的图片（遵循skip_no_text参数）
                     if self.skip_no_text and ctx and not ctx.text_regions:
                         logger.debug(f'Not saving due to --skip-no-text: {file_path}')
@@ -439,6 +536,8 @@ class MangaTranslatorLocal(MangaTranslator):
                         
                         save_result(ctx.result, output_dest, save_ctx)
                         translated_count += 1
+                        # 每翻译成功一张就记录进度
+                        _save_progress(path, src_filename)
                         
                         # 保存文本文件（如果需要）
                         if self.save_text or self.save_text_file or self.prep_manual:

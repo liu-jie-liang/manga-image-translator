@@ -1,11 +1,33 @@
-# Sakura 本地 GGUF 翻译 (方式B) 操作指南
+# 日中漫画批量翻译 操作指南
 
-## 方式选择
+## 翻译器降级链
 
-| 方式 | 环境变量 | 说明 |
-|------|---------|------|
-| A (Ollama HTTP) | 不设置 `SAKURA_GGUF_PATH` | 默认，向后兼容，依赖 Ollama 服务 |
-| B (本地 GGUF) | 设置 `SAKURA_GGUF_PATH` | GPU 直连，单例常驻显存，不依赖外部服务 |
+启动时自动按优先级选择翻译器：
+
+```
+方式B (本地 GGUF) → 方式A (Ollama HTTP) → 报错退出
+```
+
+| 优先级 | 方式 | 触发条件 | 说明 |
+|--------|------|---------|------|
+| 1 (默认) | 方式B (GGUF) | `SAKURA_GGUF_PATH` 指向有效 .gguf 文件 | GPU 直连，单例常驻显存 |
+| 2 (降级) | 方式A (Ollama) | GGUF 不可用 + Ollama `/api/tags` 可达 | HTTP API 远程调用 |
+| - | 报错退出 | 两者都不可用 | 提示用户设置环境变量 |
+
+探测时机：批处理启动时（`batch_translate` 入口），选定后整个批次使用同一翻译器。
+
+## 环境变量配置
+
+```bash
+# 方式B (推荐): 本地 GGUF 直连 GPU
+export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
+
+# 方式A (降级): Ollama HTTP 远程服务
+export SAKURA_API_BASE='http://192.168.1.15:11434/v1'
+export SAKURA_MODEL='sakura-14b-qwen2.5-v1.0'
+```
+
+> `.command` 脚本已预设上述配置，双击即可启动。
 
 ## 方式B 使用
 
@@ -21,7 +43,7 @@ python -m manga_translator --mode local -i chapter-13/ -o output/ \
   --translator sakura --use-gpu-limited
 ```
 
-## 可选配置
+## 方式B 可选配置
 
 ```bash
 export SAKURA_GGUF_N_GPU_LAYERS=-1   # GPU 层数，-1=全部（默认）
@@ -29,7 +51,9 @@ export SAKURA_GGUF_N_CTX=4096        # 上下文长度（默认）
 export SAKURA_VERSION=0.9            # Prompt 版本
 ```
 
-## 性能对比 (157页实测)
+## 性能对比
+
+### 157页全量对比（第13话，2026-06-10 实测）
 
 | 阶段 | 方式A (Ollama) | 方式B (GGUF) | B 优势 |
 |------|---------------|-------------|--------|
@@ -40,22 +64,29 @@ export SAKURA_VERSION=0.9            # Prompt 版本
 | 稳定性 CV | 0.45 | 0.31 | 更稳定 |
 | 异常慢页 (>8s) | 15 页 | 8 页 | 减半 |
 
+### 30页 E2E 对比（2026-06-11 实测）
+
+| 模式 | 总耗时 | 平均/页 | 成功率 |
+|------|--------|---------|--------|
+| 方式B (GGUF) | 223.7s (3.7 min) | 7.5s | 30/30 |
+| 方式A (Ollama) | 232.9s (3.9 min) | 7.8s | 30/30 |
+
 **结论**: 方式B 在速度、稳定性、质量三个维度均优于方式A。推荐生产环境使用方式B。
 
 ## 测试
 
 ```bash
 # 单元测试
-python -m pytest test/unit/test_sakura_local.py -v
+python -m pytest test/unit/ -v
 
-# A/B 对比 benchmark
-python test/benchmark.py 30                    # 方式A
-SAKURA_GGUF_PATH=... python test/benchmark_sakura_local.py 30  # 方式B
+# 端到端测试
+python test/e2e_gguf.py      # 方式B (GGUF) - 30页
+python test/e2e_ollama.py    # 方式A (Ollama) - 30页
 ```
 
 ## 注意事项
 
 - GGUF 模型文件约 8.5GB，首次加载 10 秒
 - 模型加载后常驻显存（单例），进程退出时自动释放
-- 本机统一内存 64GB，同时运行检测/OCR/擦除模型 + GGUF 翻译模型，绰绰有余
+- 本机统一内存 64GB，同时运行检测/OCR/擦除模型 + GGUF 翻译模型绰绰有余
 - 方式B 使用 `llama-cpp-python`，需已安装：`CMAKE_ARGS="-DGGML_METAL=on" pip install llama-cpp-python`

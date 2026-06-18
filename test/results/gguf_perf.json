@@ -1,0 +1,8 @@
+{
+  "mode": "GGUF (方式B)",
+  "total_images": 158,
+  "translated_images": 158,
+  "elapsed_seconds": 973.9,
+  "elapsed_minutes": 16.2,
+  "avg_seconds_per_image": 6.2
+}
