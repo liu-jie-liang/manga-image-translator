@@ -70,10 +70,9 @@ class TestQwen3KoZhTranslator:
         assert any('\u4e00' <= c <= '\u9fff' for c in sample[1])
 
     def test_enable_thinking_disabled(self):
-        """ollama 的 enableThinking 被禁用。"""
+        """olama 的 think 模式被禁用（通过原生 API 的 think=false）。"""
         translator = Qwen3KoZhTranslator()
-        assert 'enable_thinking' in translator.extra_body
-        assert translator.extra_body['enable_thinking'] is False
+        assert translator._ollama_chat_url.endswith('/api/chat')
 
     @pytest.mark.asyncio
     async def test_translate_method_exists(self):
@@ -87,20 +86,17 @@ class TestQwen3KoZhTranslator:
         """翻译返回格式正确（列表）。"""
         translator = Qwen3KoZhTranslator()
 
-        mock_response = MagicMock()
-        mock_response.choices = [
-            MagicMock(
-                message=MagicMock(
-                    content='<|1|>你好\n<|2|>谢谢\n<|3|>再见'
-                )
-            )
-        ]
-        mock_response.usage = MagicMock(total_tokens=100)
+        mock_response = AsyncMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(return_value={
+            'message': {'role': 'assistant', 'content': '<|1|>你好\n<|2|>谢谢\n<|3|>再见'},
+            'eval_count': 10,
+            'prompt_eval_count': 50,
+        })
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
 
-        with patch.object(translator.client.chat.completions, 'create',
-                          new_callable=AsyncMock) as mock_create:
-            mock_create.return_value = mock_response
-
+        with patch('aiohttp.ClientSession.post', return_value=mock_response):
             result = await translator._translate('KOR', 'CHS', ['안녕하세요', '감사합니다', '안녕히 계세요'])
             assert isinstance(result, list)
             assert len(result) == 3
@@ -108,19 +104,17 @@ class TestQwen3KoZhTranslator:
     @pytest.mark.asyncio
     async def test_translate_handles_error(self):
         """翻译失败时抛出异常（无降级）。"""
-        import openai
+        import aiohttp
 
         translator = Qwen3KoZhTranslator()
 
-        with patch.object(translator.client.chat.completions, 'create',
-                          new_callable=AsyncMock) as mock_create:
-            mock_create.side_effect = openai.APIError(
-                message='Server error',
-                request=None,
-                body=None
-            )
+        mock_response = AsyncMock()
+        mock_response.status = 500
+        mock_response.text = AsyncMock(return_value='Internal Server Error')
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=None)
 
-            # 重试耗尽后应抛出异常
+        with patch('aiohttp.ClientSession.post', return_value=mock_response):
             with pytest.raises(Exception):
                 await translator._translate('KOR', 'CHS', ['안녕하세요'])
 
