@@ -181,6 +181,7 @@ class Qwen3KoZhTranslator(CustomOpenAiTranslator):
             'model': self.model,
             'messages': messages,
             'stream': False,
+            'keep_alive': '24h',  # 防止模型在请求间被卸载，避免最后一页重新加载
             'think': False,  # 禁用思考模式，大幅提升速度
             'options': {
                 'temperature': self.temperature,
@@ -189,7 +190,8 @@ class Qwen3KoZhTranslator(CustomOpenAiTranslator):
             },
         }
 
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=self._TIMEOUT)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.post(self._ollama_chat_url, json=payload) as resp:
                 if resp.status != 200:
                     error_text = await resp.text()
