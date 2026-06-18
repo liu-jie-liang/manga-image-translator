@@ -16,68 +16,30 @@ import os
 import sys
 import re
 import time
-import torch
 import aiohttp
 from typing import List
 
 from manga_translator import Config
 from manga_translator.utils import get_logger
-from manga_translator.mode.local import (
-    MangaTranslatorLocal,
-    _clear_progress,
+from manga_translator.batch_common import (
+    IMAGE_EXTS,
+    _sort_key_dir,
+    sort_subdirs,
+    _detect_device,
     _get_image_files,
     _load_progress,
     _save_progress,
+    _clear_progress,
+    _clear_all_progress,
+)
+from manga_translator.mode.local import (
+    MangaTranslatorLocal,
 )
 from manga_translator.benchmark import benchmark_context
-
-# ─── Supported image file extensions ───
-
-IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff', '.tif', '.gif'}
 
 # ─── Logger ───
 
 logger = get_logger('batch')
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Directory sorting
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Category order for sort keys
-_CAT_PURE_DIGITS = 0
-_CAT_DIGITS_LETTERS = 1
-_CAT_LETTERS_DIGITS = 2
-_CAT_OTHER = 3
-
-
-def _sort_key_dir(name: str) -> tuple:
-    """Generate a sort key tuple for a directory name."""
-    # 1. Pure digits: ^\d+$
-    if re.match(r'^\d+$', name):
-        return (_CAT_PURE_DIGITS, int(name), '', name)
-
-    # 2. Digits + letters (with optional _ or - separator): ^\d+[_-]?[a-zA-Z]
-    m = re.match(r'^(\d+)[_-]?([a-zA-Z].*)$', name)
-    if m:
-        return (_CAT_DIGITS_LETTERS, int(m.group(1)), m.group(2).lower(), name)
-
-    # 3. Letters + digits (with optional _ or - separator): ^[a-zA-Z]+[_-]?\d+
-    m = re.match(r'^([a-zA-Z]+)[_-]?(\d+.*)', name)
-    if m:
-        return (_CAT_LETTERS_DIGITS, m.group(1).lower(), int(re.match(r'\d+', m.group(2)).group()), name)
-
-    # 4. Pure letters → 等同于字母+数字0
-    if re.match(r'^[a-zA-Z]+$', name):
-        return (_CAT_LETTERS_DIGITS, name.lower(), 0, name)
-
-    # 5. Others → natural sort, placed last
-    return (_CAT_OTHER, 0, 0, name.lower())
-
-
-def sort_subdirs(dir_names: List[str]) -> List[str]:
-    """Sort directory names by batch translation rules."""
-    return sorted(dir_names, key=_sort_key_dir)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -98,16 +60,6 @@ BATCH_PARAMS = {
 }
 
 _translator_instance: MangaTranslatorLocal | None = None
-
-
-def _detect_device() -> str:
-    """Detect the best available device."""
-    if torch.cuda.is_available():
-        return 'cuda'
-    elif torch.backends.mps.is_available():
-        return 'mps'
-    else:
-        return 'cpu'
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -393,15 +345,6 @@ async def batch_translate(root_dir: str, retrans: bool = False, benchmark: bool 
     finally:
         # Unload models
         await _unload_models(translator_mode)
-
-
-def _clear_all_progress(root_dir: str):
-    """Recursively clear all progress files under root_dir."""
-    count = 0
-    for dirpath, _, _ in os.walk(root_dir):
-        _clear_progress(dirpath)
-        count += 1
-    logger.info(f'Cleared progress from {count} directories')
 
 
 def _save_benchmark_data(translator_mode: str, session_elapsed: float):

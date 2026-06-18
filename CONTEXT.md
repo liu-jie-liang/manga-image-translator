@@ -203,7 +203,9 @@
 
 ```
 manga_translator/
-├── batch.py                # 批量翻译入口（A+）：模型生命周期 + 目录遍历 + 交互式入口
+├── batch.py                # 日中批量翻译入口（A+）：模型生命周期 + 目录遍历 + 交互式入口
+├── batch_ko.py             # 韩中批量翻译入口（NEW）：模型生命周期 + 目录遍历 + 交互式入口
+├── batch_common.py         # 批量翻译公共模块（NEW）：目录排序、图片扫描、进度管理
 ├── manga_translator.py     # 核心翻译管道（A）：逐页翻译 + 滑动窗口
 ├── sliding_window.py       # 滑动窗口翻译策略
 ├── mode/local.py           # 本地模式入口（B）：非递归扫描 + 进度跟踪 + 图片→翻译
@@ -213,6 +215,7 @@ manga_translator/
 │   ├── chatgpt.py          # OpenAI ChatGPT 翻译器
 │   ├── sakura.py           # Sakura API 翻译器（Ollama HTTP, 方式A）
 │   ├── sakura_local.py     # Sakura 本地 GGUF 翻译器（llama-cpp-python + MPS, 方式B）
+│   ├── qwen3_kozh.py       # Qwen3 韩中翻译器（NEW）：Ollama + Qwen3 14B
 │   └── sugoi.py            # Sugoi 本地翻译器（ctranslate2，不支持 MPS）
 ├── detection/              # 文字检测
 ├── ocr/                    # OCR 识别
@@ -343,6 +346,31 @@ python -m manga_translator test/materials/chapter-13 \
 
 此模式直接调用 `local.py` 的 `translate_path`，仅翻译单个目录下的图片，不遍历子目录。进度文件仍然生效。
 
+### 韩中翻译 (Korean-Chinese Translation)
+
+#### 韩中翻译专用翻译器
+
+- **Qwen3KoZhTranslator**: 韩中翻译器（`translators/qwen3_kozh.py`），基于 `CustomOpenAiTranslator`，通过 Ollama 调用 Qwen3 14B 模型。优化韩中漫画翻译 Prompt，禁用 `enableThinking` 提升效率。通过 `CUSTOM_OPENAI_API_BASE`、`CUSTOM_OPENAI_MODEL` 环境变量配置。
+- **无降级链**: 韩中翻译不使用降级链，Ollama 不可达时直接报错退出。`attempts=1`。
+- **enableThinking**: Qwen3 模型的思考模式，韩中翻译中设置为 `False` 以加速响应。
+
+#### 韩中翻译领域术语
+
+- **Webtoon (웹툰)**: 韩国网络漫画，垂直滚动格式，是韩中翻译的主要目标格式。
+- **Manhwa (만화)**: 韩语中"漫画"的统称。
+- **拟声词/拟态词 (의성어/의태어)**: 韩语中大量使用的拟声词和拟态词，翻译时保留原文或使用中文对应表达。
+- **敬语/半语 (존댓말/반말)**: 韩语中的敬语体系，翻译时需根据语境转换为中文的礼貌程度。
+- **Qwen3**: 阿里巴巴通义千问 Qwen3 系列模型，开源多语言 LLM，支持韩中翻译。14B 参数版使用 Q4_K_M 量化。
+
+#### 韩中批量翻译入口
+
+- **batch_ko.py**: 韩中批量翻译入口（`manga_translator/batch_ko.py`），与日中翻译共用 `batch_common.py` 的公共逻辑（目录排序、图片扫描、进度管理），配置 `source_lang='ko'`、`translator='custom_openai'`。
+- **批量韩中翻译.command**: macOS Finder 双击启动脚本，设置韩中翻译环境变量（`CUSTOM_OPENAI_API_BASE`、`CUSTOM_OPENAI_MODEL`），调用 `batch_ko.py`。
+
+#### 公共模块
+
+- **batch_common.py**: 日中/韩中批量翻译的公共逻辑模块（`manga_translator/batch_common.py`），包含 `IMAGE_EXTS`、`sort_subdirs`、`_detect_device`、`_get_image_files`、`_load_progress`、`_save_progress`、`_clear_progress`、`_clear_all_progress`、`PROGRESS_FILE`。`batch.py`（日中）和 `batch_ko.py`（韩中）均从此模块导入。
+
 ### 环境变量速查表
 
 | 变量 | 说明 | 必填 |
@@ -350,6 +378,9 @@ python -m manga_translator test/materials/chapter-13 \
 | `SAKURA_API_BASE` | Ollama API 地址（方式A） | 方式A 必填 |
 | `SAKURA_MODEL` | Ollama 模型名 | 方式A 必填 |
 | `SAKURA_GGUF_PATH` | 本地 GGUF 文件路径（方式B） | 方式B 必填 |
+| `CUSTOM_OPENAI_API_BASE` | Qwen3 Ollama API 地址（韩中翻译） | 韩中 必填 |
+| `CUSTOM_OPENAI_MODEL` | Qwen3 Ollama 模型名（韩中翻译） | 韩中 必填 |
+| `CUSTOM_OPENAI_API_KEY` | API Key（韩中翻译，默认 `ollama`） | 韩中 必填 |
 | `USE_GPU_LIMITED` | MPS 加速 Detection/OCR/Inpainting | 推荐 |
 
 ## 测试报告

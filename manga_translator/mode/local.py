@@ -17,82 +17,17 @@ from ..translators import (
     TranslatorConfig,
 )
 from ..utils import natural_sort, replace_prefix, get_color_name, rgb2hex, get_logger
+from ..batch_common import (
+    IMAGE_EXTS,
+    _get_image_files,
+    _load_progress,
+    _save_progress,
+    _clear_progress,
+    PROGRESS_FILE,
+)
 
 # 使用专用的local logger
 logger = get_logger('local')
-
-# 支持的图片扩展名
-IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff', '.tif', '.gif'}
-
-# 进度文件名
-PROGRESS_FILE = '.translate_progress.json'
-
-
-def _get_image_files(path: str) -> List[str]:
-    """获取目录下当前层级的图片文件列表（不递归子目录）。
-    
-    跳过：子目录、非图片文件、.thumb、.translate_progress.json。
-    """
-    if not os.path.isdir(path):
-        return []
-    entries = os.listdir(path)
-    files = []
-    for entry in entries:
-        full_path = os.path.join(path, entry)
-        # 跳过子目录
-        if os.path.isdir(full_path):
-            continue
-        # 跳过 .thumb
-        if entry.lower() == '.thumb':
-            continue
-        # 跳过进度文件
-        if entry == PROGRESS_FILE:
-            continue
-        # 跳过非图片扩展名
-        ext = os.path.splitext(entry)[1].lower()
-        if ext not in IMAGE_EXTS:
-            continue
-        # 验证可以被PIL打开
-        try:
-            img = Image.open(full_path)
-            img.verify()
-        except Exception:
-            logger.warning(f'Failed to open image: {full_path}')
-            continue
-        files.append(entry)
-    return natural_sort(files)
-
-
-def _load_progress(path: str) -> set:
-    """从目录中加载已完成翻译的图片文件名集合。"""
-    progress_path = os.path.join(path, PROGRESS_FILE)
-    if not os.path.exists(progress_path):
-        return set()
-    try:
-        with open(progress_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        return set(data.get('completed', []))
-    except Exception:
-        logger.warning(f'Failed to read progress file: {progress_path}')
-        return set()
-
-
-def _save_progress(path: str, filename: str):
-    """记录一张已完成翻译的图片到进度文件。"""
-    progress_path = os.path.join(path, PROGRESS_FILE)
-    completed = _load_progress(path)
-    completed.add(filename)
-    # 按文件名排序存储
-    data = {'completed': sorted(completed)}
-    with open(progress_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-
-def _clear_progress(path: str):
-    """删除目录下的进度文件（retrans）。"""
-    progress_path = os.path.join(path, PROGRESS_FILE)
-    if os.path.exists(progress_path):
-        os.remove(progress_path)
 
 # 提示音开关
 ENABLE_COMPLETION_SOUND = True
