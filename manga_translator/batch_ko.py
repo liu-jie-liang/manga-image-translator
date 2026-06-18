@@ -50,7 +50,7 @@ logger = get_logger('batch_ko')
 # Hardcoded config for 韩中漫画翻译
 BATCH_PARAMS = {
     'translator': {
-        'translator': 'custom_openai',
+        'translator': 'qwen3_kozh',
         'target_lang': 'CHS',
     },
     'use_gpu_limited': True,

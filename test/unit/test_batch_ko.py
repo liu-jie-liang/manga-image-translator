@@ -41,8 +41,8 @@ class TestBatchKoParams:
         assert BATCH_PARAMS['attempts'] == 1
 
     def test_translator_type(self):
-        """翻译器类型为 custom_openai。"""
-        assert BATCH_PARAMS['translator']['translator'] == 'custom_openai'
+        """翻译器类型为 qwen3_kozh。"""
+        assert BATCH_PARAMS['translator']['translator'] == 'qwen3_kozh'
 
     def test_save_quality(self):
         """保存质量 100。"""
