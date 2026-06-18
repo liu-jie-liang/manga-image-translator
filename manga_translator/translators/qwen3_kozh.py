@@ -82,9 +82,15 @@ QWEN3_KOZH_CHAT_SAMPLE = (
 class Qwen3KoZhTranslator(CustomOpenAiTranslator):
     """Qwen3 14B 韩中翻译器。
 
-    通过 Ollama API 调用 Qwen3 14B 模型进行韩文→简体中文翻译。
+    通过 Ollama 原生 /api/chat 端点调用 Qwen3 14B 模型进行韩文→简体中文翻译。
     专为韩漫(Webtoon)翻译场景优化，无降级链。
     """
+
+    # 超时重试策略：使用 Ollama 原生 /api/chat 端点，think=false 时
+    # 正常请求 0.6-2.9s 完成。单次 120s 超时够用，不需重试。
+    # 父类默认 40s/3 次重试，最坏情况 280s(4.7min)，反而因重试雪上加霜。
+    _TIMEOUT = 120
+    _TIMEOUT_RETRY_ATTEMPTS = 0
 
     _LANGUAGE_CODE_MAP = {
         'KOR': 'ko',
