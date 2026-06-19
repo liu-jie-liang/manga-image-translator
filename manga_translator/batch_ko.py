@@ -23,6 +23,7 @@ from typing import List
 
 from manga_translator import Config
 from manga_translator.utils import get_logger
+from manga_translator.utils.log import init_logging
 from manga_translator.batch_common import (
     IMAGE_EXTS,
     sort_subdirs,
@@ -40,6 +41,7 @@ from manga_translator.translators.qwen3_kozh import Qwen3KoZhTranslator
 
 # ─── Logger ───
 
+init_logging()
 logger = get_logger('batch_ko')
 
 
@@ -153,7 +155,8 @@ async def _translate_directory(dir_path: str, dest_dir: str, retrans: bool):
     translator = _get_translator()
     params = dict(BATCH_PARAMS)
     params['retrans'] = retrans
-
+    if retrans:
+        params['overwrite'] = True
     logger.info(f'Translating directory: {dir_path}')
     await translator.translate_path(dir_path, dest_dir, params)
 

@@ -12,13 +12,14 @@
     from manga_translator.batch_common import sort_subdirs, _get_image_files, ...
 """
 import json
+import logging
 import os
 import re
 from typing import List
 
 from PIL import Image
 
-from manga_translator.utils import natural_sort
+from manga_translator.utils import get_logger, natural_sort
 
 # ─── Supported image file extensions ───
 
@@ -150,10 +151,17 @@ def _save_progress(path: str, filename: str):
 
 
 def _clear_progress(path: str):
-    """删除目录下的进度文件（retrans）。"""
+    """删除目录下的进度文件（retrans）。
+    
+    如果因权限问题无法操作（如沙箱环境），则跳过。
+    """
     progress_path = os.path.join(path, PROGRESS_FILE)
     if os.path.exists(progress_path):
-        os.remove(progress_path)
+        try:
+            os.remove(progress_path)
+        except PermissionError:
+            logger = get_logger('batch_common')
+            logger.warning(f'Cannot clear progress file (permission denied): {progress_path}')
 
 
 def _clear_all_progress(root_dir: str):

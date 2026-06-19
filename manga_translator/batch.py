@@ -21,6 +21,7 @@ from typing import List
 
 from manga_translator import Config
 from manga_translator.utils import get_logger
+from manga_translator.utils.log import init_logging
 from manga_translator.batch_common import (
     IMAGE_EXTS,
     _sort_key_dir,
@@ -39,6 +40,7 @@ from manga_translator.benchmark import benchmark_context
 
 # ─── Logger ───
 
+init_logging()
 logger = get_logger('batch')
 
 
@@ -195,6 +197,8 @@ async def _translate_directory(dir_path: str, dest_dir: str, retrans: bool, benc
     translator = _get_translator()
     params = dict(BATCH_PARAMS)
     params['retrans'] = retrans
+    if retrans:
+        params['overwrite'] = True
 
     if benchmark:
         # Benchmark mode: handle per-file lifecycle manually for instrumentation
