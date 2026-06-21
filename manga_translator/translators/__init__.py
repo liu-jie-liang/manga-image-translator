@@ -24,6 +24,7 @@ from .none import NoneTranslator
 from .original import OriginalTranslator
 from .sakura import SakuraTranslator
 from .sakura_local import SakuraLocalTranslator
+from .galtransl_local import GaltranslLocalTranslator
 from .qwen2 import Qwen2Translator, Qwen2BigTranslator
 from .groq import GroqTranslator
 from .gemini import GeminiTranslator
@@ -69,6 +70,7 @@ TRANSLATORS = {
     Translator.none: NoneTranslator,
     Translator.original: OriginalTranslator,
     Translator.sakura: lambda: SakuraLocalTranslator() if SakuraLocalTranslator._use_local() else SakuraTranslator(),
+    Translator.galtransl: GaltranslLocalTranslator,
     **GPT_TRANSLATORS,
     **OFFLINE_TRANSLATORS,
 }

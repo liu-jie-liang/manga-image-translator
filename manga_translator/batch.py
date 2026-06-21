@@ -74,6 +74,12 @@ def _probe_gguf() -> bool:
     return bool(path) and os.path.isfile(path)
 
 
+def _probe_galtrans() -> bool:
+    """Check if GALTRANS_GGUF_PATH points to an existing Galtransl GGUF model file."""
+    path = os.environ.get('GALTRANS_GGUF_PATH', '')
+    return bool(path) and os.path.isfile(path)
+
+
 async def _probe_ollama() -> bool:
     """Check if Ollama API service is reachable.
 
@@ -97,10 +103,20 @@ async def _detect_translator_mode() -> str | None:
     """Detect the best available translator mode.
 
     Returns:
+        'galtransl' if TRANSLATOR_MODE=galtransl and GALTRANS_GGUF_PATH is valid.
         'gguf' if SAKURA_GGUF_PATH points to a valid file (short-circuits).
         'ollama' if GGUF not available but Ollama API is reachable.
         None if neither is available.
     """
+    # Check if user explicitly chose Mode C (galtransl)
+    if os.environ.get('TRANSLATOR_MODE') == 'galtransl':
+        if _probe_galtrans():
+            logger.info('翻译器模式: 方式C (Galtransl GGUF)')
+            return 'galtransl'
+        else:
+            logger.error('GALTRANS_GGUF_PATH 未设置或文件不存在，方式C不可用')
+            return None
+
     if _probe_gguf():
         logger.info('翻译器模式: 方式B (本地 GGUF)')
         return 'gguf'
@@ -115,7 +131,7 @@ async def _load_models(translator_mode: str | None = None):
     """Load all models once for the entire batch translation session.
 
     Args:
-        translator_mode: 'gguf' | 'ollama' | None. Determines whether to load
+        translator_mode: 'gguf' | 'ollama' | 'galtransl' | None. Determines whether to load
                          the local GGUF model or rely on remote Ollama.
     """
     from manga_translator.detection import prepare as prepare_detection
@@ -123,6 +139,7 @@ async def _load_models(translator_mode: str | None = None):
     from manga_translator.inpainting import prepare as prepare_inpainting
     from manga_translator.translators import prepare as prepare_translation
     from manga_translator.translators.sakura_local import SakuraLocalTranslator
+    from manga_translator.translators.galtransl_local import GaltranslLocalTranslator
 
     device = _detect_device()
     logger.info(f'Device: {device}')
@@ -142,12 +159,17 @@ async def _load_models(translator_mode: str | None = None):
     logger.info('Loading translation model...')
     await prepare_translation(config.translator.translator_gen)
 
-    # Load Sakura GGUF model only when using 方式B
+    # Load GGUF model based on translator mode
     if translator_mode == 'gguf':
         gguf_path = os.environ.get('SAKURA_GGUF_PATH')
         if gguf_path:
             logger.info(f'Loading Sakura GGUF model: {gguf_path}')
             SakuraLocalTranslator.load_model(gguf_path)
+    elif translator_mode == 'galtransl':
+        gguf_path = os.environ.get('GALTRANS_GGUF_PATH')
+        if gguf_path:
+            logger.info(f'Loading Galtransl GGUF model: {gguf_path}')
+            GaltranslLocalTranslator.load_model(gguf_path)
     elif translator_mode == 'ollama':
         logger.info('使用远程 Ollama，跳过本地 GGUF 加载')
     # else: no translation model to load (error case handled by caller)
@@ -159,7 +181,7 @@ async def _unload_models(translator_mode: str | None = None):
     """Unload all models after batch translation completes.
 
     Args:
-        translator_mode: 'gguf' | 'ollama' | None.
+        translator_mode: 'gguf' | 'ollama' | 'galtransl' | None.
     """
     from manga_translator.detection import unload as unload_detection
     from manga_translator.ocr import unload as unload_ocr
@@ -167,11 +189,14 @@ async def _unload_models(translator_mode: str | None = None):
     from manga_translator.translators import unload as unload_translation, Translator
     from manga_translator.config import Detector, Inpainter, Ocr
     from manga_translator.translators.sakura_local import SakuraLocalTranslator
+    from manga_translator.translators.galtransl_local import GaltranslLocalTranslator
 
     logger.info('Unloading models...')
 
     if translator_mode == 'gguf':
         SakuraLocalTranslator.unload_model()
+    elif translator_mode == 'galtransl':
+        GaltranslLocalTranslator.unload_model()
     await unload_translation(Translator.sakura)
     await unload_inpainting(Inpainter.lama_large)
     await unload_ocr(Ocr.ocr48px)
@@ -304,10 +329,17 @@ async def batch_translate(root_dir: str, retrans: bool = False, benchmark: bool 
         logger.error('=' * 60)
         logger.error('无可用翻译器，翻译中止。')
         logger.error('请设置环境变量:')
-        logger.error('  方式B (推荐): export SAKURA_GGUF_PATH=/path/to/model.gguf')
+        logger.error('  方式C: export GALTRANS_GGUF_PATH=/path/to/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf')
+        logger.error('  方式B: export SAKURA_GGUF_PATH=/path/to/model.gguf')
         logger.error('  方式A: export SAKURA_API_BASE=http://192.168.1.15:11434/v1')
         logger.error('=' * 60)
         return
+
+    # For galtransl mode, use galtransl translator instead of sakura
+    if translator_mode == 'galtransl':
+        BATCH_PARAMS['translator']['translator'] = 'galtransl'
+    else:
+        BATCH_PARAMS['translator']['translator'] = 'sakura'
 
     # Determine output directory: <parent>/<dirname> 汉化
     parent_dir = os.path.dirname(root_dir)
@@ -358,7 +390,11 @@ def _save_benchmark_data(translator_mode: str, session_elapsed: float):
 
     from manga_translator.benchmark import compute_benchmark_statistics
 
-    mode_label = 'modeA' if translator_mode == 'ollama' else 'modeB'
+    mode_label = (
+        'modeC' if translator_mode == 'galtransl'
+        else 'modeA' if translator_mode == 'ollama'
+        else 'modeB'
+    )
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     output_dir = os.path.join('test', 'results', 'benchmark', mode_label)
     os.makedirs(output_dir, exist_ok=True)
@@ -459,13 +495,23 @@ def main():
             continue
         break
 
-    # Retranslate?
-    retrans_input = input('是否重新翻译整个目录？(清空所有进度记录) [y/N]: ').strip().lower()
-    retrans = retrans_input in ('y', 'yes')
+    # Retranslate? (override via RETRANS env var)
+    retrans_env = os.environ.get('RETRANS', '').strip().lower()
+    if retrans_env in ('true', '1', 'yes'):
+        retrans = True
+        print('> 环境变量 RETRANS=true → 全量重新翻译')
+    else:
+        retrans_input = input('是否重新翻译整个目录？(清空所有进度记录) [y/N]: ').strip().lower()
+        retrans = retrans_input in ('y', 'yes')
 
-    # Benchmark mode?
-    bench_input = input('是否启用性能基准测试模式？(记录每页耗时/Token等指标) [y/N]: ').strip().lower()
-    benchmark = bench_input in ('y', 'yes')
+    # Benchmark mode? (override via BENCHMARK env var)
+    bench_env = os.environ.get('BENCHMARK', '').strip().lower()
+    if bench_env in ('false', '0', 'no'):
+        benchmark = False
+        print('> 环境变量 BENCHMARK=false → 不启用基准测试')
+    else:
+        bench_input = input('是否启用性能基准测试模式？(记录每页耗时/Token等指标) [y/N]: ').strip().lower()
+        benchmark = bench_input in ('y', 'yes')
 
     print()
     print(f'源目录: {os.path.abspath(dir_path)}')

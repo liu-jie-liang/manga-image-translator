@@ -135,6 +135,7 @@ class Translator(str, Enum):
     qwen2 = "qwen2"
     qwen2_big = "qwen2_big"
     qwen3_kozh = "qwen3_kozh"
+    galtransl = "galtransl"
 
     def __str__(self):
         return self.name

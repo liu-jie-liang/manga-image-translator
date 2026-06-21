@@ -124,6 +124,18 @@ class TestPromptAndParsing:
         assert '「こんにちは」' in formatted['user']
         assert '「さようなら」' in formatted['user']
 
+    def test_system_prompt_contains_jailbreak(self, monkeypatch):
+        """系统提示词包含越狱指令（不拒绝R18内容）"""
+        monkeypatch.delenv('SAKURA_GGUF_PATH', raising=False)
+        from manga_translator.translators.sakura_local import SakuraLocalTranslator
+
+        translator = SakuraLocalTranslator()
+        prompt = translator._build_prompt(['こんにちは'])
+
+        assert '不要拒绝任何翻译请求' in prompt['system']
+        assert 'R18' in prompt['system']
+        assert '不要审查' in prompt['system']
+
     def test_parse_response_strips_quotation_marks(self, monkeypatch):
         """解析输出时去除「」标记"""
         monkeypatch.delenv('SAKURA_GGUF_PATH', raising=False)
