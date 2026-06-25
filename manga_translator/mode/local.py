@@ -56,6 +56,36 @@ def safe_get_memory_info():
         logger.warning(f'Unable to get memory info: {e}')
         return 95.0, 100  # 假设高内存使用率，低可用内存
 
+
+def _has_text_content(ctx) -> bool:
+    """检查原始OCR是否检测到了有内容的文本。"""
+    return (
+        hasattr(ctx, 'textlines')
+        and ctx.textlines
+        and any(t.text.strip() for t in ctx.textlines if hasattr(t, 'text'))
+    )
+
+
+def _should_record_progress(ctx) -> bool:
+    """
+    判断是否应该为翻译结果记录进度。
+
+    返回 False 的场景：
+    - OCR 检测到了原文文本
+    - 但所有 text_regions 都被过滤（翻译结果为空被过滤层移除）
+    此时原始图像（含日文原文）会保存，但进度不会记录，以便下次续传时重新翻译。
+    """
+    if not ctx:
+        return False
+    if not ctx.result:
+        return False
+    # text_regions 存在但为空列表（区别于没检测到文本时 text_regions 属性不存在）
+    if hasattr(ctx, 'text_regions') and ctx.text_regions is not None and len(ctx.text_regions) == 0:
+        if _has_text_content(ctx):
+            return False
+    return True
+
+
 def force_cleanup():
     """强制内存清理"""
     logger.debug('Performing force memory cleanup...')
@@ -94,6 +124,7 @@ class MangaTranslatorLocal(MangaTranslator):
         self.prep_manual = params.get('prep_manual', None)
         self.batch_size = params.get('batch_size', 1)
         self.disable_memory_optimization = params.get('disable_memory_optimization', False)
+        self._last_translation_ctx = None
 
     async def translate_path(self, path: str, dest: str = None, params: dict[str, Union[int, str]] = None):
         """
@@ -201,8 +232,10 @@ class MangaTranslatorLocal(MangaTranslator):
                     try:
                         if await self.translate_file(file_path, output_dest, params, config):
                             translated_count += 1
-                            # 每翻译成功一张就记录进度
-                            _save_progress(path, f)
+                            # 每翻译成功一张就记录进度（跳过全空翻译）
+                            last_ctx = getattr(self, '_last_translation_ctx', None)
+                            if last_ctx is None or _should_record_progress(last_ctx):
+                                _save_progress(path, f)
                     except Exception as e:
                         logger.error(e)
                         raise e
@@ -230,11 +263,9 @@ class MangaTranslatorLocal(MangaTranslator):
                         logger.debug(f'Failed to play completion sound: {e}')
 
     async def translate_file(self, path: str, dest: str, params: dict, config: Config):
-        if not params.get('overwrite') and os.path.exists(dest):
-            logger.info(
-                f'Skipping as already translated: "{dest}". Use --overwrite to overwrite existing translations.')
-            await self._report_progress('saved', True)
-            return True
+        # Always overwrite: log when destination exists
+        if os.path.exists(dest):
+            logger.info(f'Overwriting existing file: "{dest}"')
 
         logger.info(f'Translating: "{path}"')
 
@@ -294,6 +325,8 @@ class MangaTranslatorLocal(MangaTranslator):
             # 直接翻译图片，不再需要传递文件名
             ctx = await self.translate(img, config)
             result = ctx.result
+            # Store context for callers to check translation result status
+            self._last_translation_ctx = ctx
 
             # TODO
             # Proper way to use the config but for now juste pass what we miss here ton ctx
@@ -391,10 +424,9 @@ class MangaTranslatorLocal(MangaTranslator):
             p, ext = os.path.splitext(f)
             output_dest = os.path.join(dest, f'{p}.{file_ext or ext[1:]}')
             
-            # 检查是否需要跳过已翻译的文件
-            if not params.get('overwrite') and os.path.exists(output_dest):
-                logger.debug(f'Skipping already translated file: "{output_dest}"')
-                continue
+            # Always overwrite: log when destination exists
+            if os.path.exists(output_dest):
+                logger.debug(f'Overwriting existing file: "{output_dest}"')
                 
             # 尝试加载图片
             try:
@@ -471,8 +503,9 @@ class MangaTranslatorLocal(MangaTranslator):
                         
                         save_result(ctx.result, output_dest, save_ctx)
                         translated_count += 1
-                        # 每翻译成功一张就记录进度
-                        _save_progress(path, src_filename)
+                        # 每翻译成功一张就记录进度（跳过全空翻译）
+                        if _should_record_progress(ctx):
+                            _save_progress(path, src_filename)
                         
                         # 保存文本文件（如果需要）
                         if self.save_text or self.save_text_file or self.prep_manual:

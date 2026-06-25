@@ -103,13 +103,29 @@ export GALTRANS_GGUF_N_CTX=4096        # 上下文长度（默认）
 
 **结论**: 方式B 和方式C 速度差异 <1%，方式C 对 R18 内容翻译支持更好。
 
+## Overwrite 与续传行为
+
+**overwrite 始终为 True**：无论 `retrans=True` 还是 `retrans=False`，目标目录的图片都会被覆盖。不存在"跳过已存在文件"的情况。
+
+**续传逻辑**：
+- `retrans=False`：跳过 progress 文件中已记录的图片，只翻译新图片
+- `retrans=True`：无视 progress 记录，所有图片全部重翻
+
+**关键变化**：
+- **目标文件存在性不再参与判断**——即使目标文件已存在，只要 progress 没有记录，就会重新翻译
+- **翻译结果全部为空时不记录 progress**——如果 OCR 检测到原文但模型返回空结果（如 R18 内容被审查），progress 不会被写入，下次续传时该图片仍会被处理
+
 ## 测试
 
 ```bash
 # 单元测试
 python -m pytest test/unit/ -v
 
-# 端到端测试
+# 端到端测试（首次/续传/重翻 3 场景）
+SAKURA_GGUF_PATH=... python test/e2e_gguf_2img.py         # 方式B
+TRANSLATOR_MODE=galtransl GALTRANS_GGUF_PATH=... python test/e2e_galtransl_2img.py  # 方式C
+
+# 旧版端到端测试（单次翻译）
 python test/e2e_gguf.py         # 方式B (GGUF)
 python test/e2e_ollama.py       # 方式A (Ollama)
 python test/e2e_galtransl.py    # 方式C (Galtransl) - 直接模型测试

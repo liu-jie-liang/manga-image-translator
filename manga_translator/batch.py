@@ -35,6 +35,7 @@ from manga_translator.batch_common import (
 )
 from manga_translator.mode.local import (
     MangaTranslatorLocal,
+    _should_record_progress,
 )
 from manga_translator.benchmark import benchmark_context
 
@@ -222,8 +223,7 @@ async def _translate_directory(dir_path: str, dest_dir: str, retrans: bool, benc
     translator = _get_translator()
     params = dict(BATCH_PARAMS)
     params['retrans'] = retrans
-    if retrans:
-        params['overwrite'] = True
+    params['overwrite'] = True  # Always overwrite existing files
 
     if benchmark:
         # Benchmark mode: handle per-file lifecycle manually for instrumentation
@@ -253,7 +253,10 @@ async def _translate_directory(dir_path: str, dest_dir: str, retrans: bool, benc
             try:
                 success = await translator.translate_file(file_path, output_dest, params, Config(**BATCH_PARAMS))
                 if success:
-                    _save_progress(dir_path, f)
+                    # Skip progress recording if translation was empty (text existed but all empty)
+                    last_ctx = getattr(translator, '_last_translation_ctx', None)
+                    if last_ctx is None or _should_record_progress(last_ctx):
+                        _save_progress(dir_path, f)
                     _t_page_elapsed = time.time() - _t_page_start
                     benchmark_context._active_page.total_elapsed = _t_page_elapsed
             except Exception as e:
