@@ -44,9 +44,12 @@ MANIFEST
 /venv
 .venv/
 
-# Input and Output
+#/Input and Output
 /input/
 /input-translated/
+
+# Benchmark results
+/test/results/
 
 # SSL Used for running server locally
 cert.pem
