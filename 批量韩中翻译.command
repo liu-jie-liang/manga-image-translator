@@ -20,7 +20,7 @@ export CUSTOM_OPENAI_API_KEY='ollama'
 
 # 激活 conda 环境
 source ~/.zshrc 2>/dev/null || source ~/.bashrc 2>/dev/null
-conda activate TraeAI-2 2>/dev/null
+conda activate ${CONDA_ENV:-TraeAI-2} 2>/dev/null
 
 echo "启动韩中漫画批量翻译..."
 echo "翻译器: Qwen3 14B (Ollama) — 韩文→简体中文"

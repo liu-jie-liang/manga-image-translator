@@ -101,7 +101,7 @@ class TestProbeOllama:
     @pytest.mark.asyncio
     async def test_ollama_uses_custom_api_base(self):
         """使用自定义 SAKURA_API_BASE，验证 api/tags 端点正确推导"""
-        with patch.dict(os.environ, {'SAKURA_API_BASE': 'http://192.168.1.15:11434/v1'}), \
+        with patch.dict(os.environ, {'SAKURA_API_BASE': 'http://localhost:11434/v1'}), \
              patch('aiohttp.ClientSession') as mock_session_cls:
             mock_session = MagicMock()
             mock_resp = AsyncMock()
@@ -118,7 +118,7 @@ class TestProbeOllama:
             # 验证使用了正确的 URL（/v1 被剥离，访问 /api/tags）
             mock_session.get.assert_called_once()
             call_args = mock_session.get.call_args[0][0]
-            assert '192.168.1.15:11434/api/tags' in call_args
+            assert 'localhost:11434/api/tags' in call_args
             assert '/v1/api/tags' not in call_args
 
 

@@ -121,14 +121,47 @@ TRANSLATOR_MODE=galtransl GALTRANS_GGUF_PATH=... python test/e2e_galtransl_2img.
 
 ## 环境变量
 
-| 变量 | 说明 | 示例 |
-|------|------|------|
-| `SAKURA_GGUF_PATH` | 方式B 模型路径 | `~/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf` |
-| `GALTRANS_GGUF_PATH` | 方式C 模型路径 | `~/.ollama/models/gguf/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf` |
-| `TRANSLATOR_MODE` | 翻译模式 | `galtransl` |
-| `RETRANS` | 续传/重翻 | `true`（重翻）/ `false`（续传） |
-| `SAKURA_API_BASE` | 方式A Ollama 地址 | `http://192.168.1.15:11434/v1` |
-| `GALTRANS_GGUF_N_GPU_LAYERS` | GPU 层数 | `-1`（全部，默认） |
+### 翻译器配置
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `SAKURA_GGUF_PATH` | 方式B 模型路径 | 无（需手动设置） |
+| `GALTRANS_GGUF_PATH` | 方式C 模型路径 | 无（需手动设置） |
+| `TRANSLATOR_MODE` | 翻译模式选择 | 自动检测 |
+| `SAKURA_MODEL` | 方式A Ollama 模型名 | `sakura-14b-qwen2.5-v1.0` |
+| `SAKURA_VERSION` | Sakura prompt 版本 | `0.9` |
+
+### API 和服务地址
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `SAKURA_API_BASE` | 方式A Sakura Ollama 地址 | `http://localhost:11434/v1` |
+| `CUSTOM_OPENAI_API_BASE` | 韩中翻译 Ollama 地址 | `http://localhost:11434/v1` |
+| `OLLAMA_HOST` | Ollama 服务根地址（仅 host:port） | `http://localhost:11434` |
+| `SAKURA_API_KEY` | Ollama API Key（通常不需要） | `ollama` |
+
+### 续传与行为
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `RETRANS` | `true`=全量重翻, `false`=续传 | 交互式选择 |
+| `BENCHMARK` | 是否输出 benchmark JSON 报告 | `false` |
+
+### GPU 与性能
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `GALTRANS_GGUF_N_GPU_LAYERS` | 方式C GPU 层数 | `-1`（全部） |
+| `GALTRANS_GGUF_N_CTX` | 方式C 上下文长度 | `4096` |
+| `USE_GPU_LIMITED` | 限制 GPU 使用（仅 det/ocr） | `false` |
+
+### 运行环境
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `CONDA_ENV` | conda 环境名（`.command` 脚本使用） | `TraeAI-2` |
+
+> 示例：`SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"`
 
 ## 文档
 

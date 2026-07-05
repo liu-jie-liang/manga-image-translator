@@ -3,7 +3,7 @@
 import os, asyncio, time, json, shutil, sys
 
 os.environ['SAKURA_GGUF_PATH'] = os.path.expanduser('~/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf')
-os.environ['SAKURA_API_BASE'] = 'http://192.168.1.15:11434/v1'
+os.environ.setdefault('SAKURA_API_BASE', 'http://localhost:11434/v1')
 os.environ['SAKURA_MODEL'] = 'sakura-14b-qwen2.5-v1.0'
 
 import logging

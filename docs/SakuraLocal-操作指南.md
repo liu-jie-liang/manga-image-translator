@@ -53,7 +53,7 @@ export SAKURA_MODEL='sakura-14b-qwen2.5-v1.0'
 ## 方式B 使用
 
 ```bash
-export SAKURA_GGUF_PATH=/Users/liujieliang/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf
+export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
 
 # 翻译单页
 python -m manga_translator --mode local -i input.jpg -o output.png \

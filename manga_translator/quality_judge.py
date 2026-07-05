@@ -77,7 +77,7 @@ class JudgeConfig:
     """
 
     # Ollama 端点
-    api_base: str = "http://192.168.1.15:11434"
+    api_base: str = "http://localhost:11434"
 
     # 模型名称
     model: str = "qwen3:14b-q4_k_m"

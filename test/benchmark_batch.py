@@ -21,7 +21,7 @@ os.environ.setdefault('MANGA_TRANSLATOR_SETTINGS', '{}')
 # ============================================================================
 # 方式A: Ollama HTTP 配置
 # ============================================================================
-os.environ['SAKURA_API_BASE'] = 'http://192.168.1.15:11434/v1'
+os.environ.setdefault('SAKURA_API_BASE', 'http://localhost:11434/v1')
 os.environ['SAKURA_MODEL'] = 'sakura-14b-qwen2.5-v1.0:latest'
 os.environ['SAKURA_VERSION'] = '0.9'
 os.environ['USE_GPU_LIMITED'] = 'true'
@@ -112,7 +112,7 @@ async def main():
     print("=" * 72)
     print("批量翻译性能实测 — Iteration 5 新执行链路")
     print("=" * 72)
-    print(f"翻译器:   sakura (Ollama HTTP @ 192.168.1.15:11434)")
+    print(f"翻译器:   sakura (Ollama HTTP @ {os.environ.get('SAKURA_API_BASE', 'localhost:11434')})")
     print(f"策略:     use_gpu_limited (det/ocr/inpaint → MPS, 翻译 → Ollama)")
     print(f"测试目录: {bench_root}")
     print(f"目录结构: 根层 + 3 子目录 (01/纯数字, 02a/数字+字母, b3/字母+数字)")

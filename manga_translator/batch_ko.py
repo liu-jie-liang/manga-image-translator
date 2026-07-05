@@ -74,7 +74,7 @@ async def _probe_ollama() -> bool:
 
     Sends a GET to {OLLAMA_HOST}/api/tags with a 3-second timeout.
     """
-    ollama_root = 'http://192.168.1.15:11434'
+    ollama_root = os.environ.get('OLLAMA_HOST', 'http://localhost:11434')
     url = f'{ollama_root}/api/tags'
     try:
         timeout = aiohttp.ClientTimeout(total=3)
@@ -141,7 +141,7 @@ def _get_translator() -> MangaTranslatorLocal:
         if not os.environ.get('CUSTOM_OPENAI_MODEL'):
             os.environ['CUSTOM_OPENAI_MODEL'] = 'qwen3:14b-q4_k_m'
         if not os.environ.get('CUSTOM_OPENAI_API_BASE'):
-            os.environ['CUSTOM_OPENAI_API_BASE'] = 'http://192.168.1.15:11434/v1'
+            os.environ['CUSTOM_OPENAI_API_BASE'] = os.environ.get('CUSTOM_OPENAI_API_BASE', 'http://localhost:11434/v1')
         _translator_instance = MangaTranslatorLocal(BATCH_PARAMS)
     return _translator_instance
 
@@ -220,7 +220,7 @@ async def batch_translate(root_dir: str, retrans: bool = False):
     if not await _probe_ollama():
         logger.error('=' * 60)
         logger.error('Ollama 服务不可达，翻译中止。')
-        logger.error('请确保 Ollama 在 http://192.168.1.15:11434 运行')
+        logger.error(f'请确保 Ollama 在 {ollama_root} 运行')
         logger.error('且已拉取 qwen3:14b-q4_k_m 模型')
         logger.error('=' * 60)
         return

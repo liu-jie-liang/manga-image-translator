@@ -7,7 +7,7 @@ import openai
 async def test():
     client = openai.AsyncOpenAI(
         api_key='empty',
-        base_url='http://192.168.1.15:11434/v1'
+        base_url=os.environ.get('SAKURA_API_BASE', 'http://localhost:11434/v1')
     )
     texts = [
         '第61話', '敗戦決定', 'あ～あ～', '全滅必至だ',

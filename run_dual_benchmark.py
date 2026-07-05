@@ -40,15 +40,15 @@ def run_mode(mode_name: str):
 
 if __name__ == '__main__':
     # ── Mode A: Ollama HTTP ──
-    os.environ['SAKURA_API_BASE'] = 'http://192.168.1.15:11434/v1'
-    os.environ['SAKURA_MODEL'] = 'sakura-14b-qwen2.5-v1.0'
+    os.environ.setdefault('SAKURA_API_BASE', 'http://localhost:11434/v1')
+    os.environ.setdefault('SAKURA_MODEL', 'sakura-14b-qwen2.5-v1.0')
     os.environ.pop('SAKURA_GGUF_PATH', None)
     run_mode("MODE A: Ollama HTTP")
 
     # ── Mode B: Local GGUF ──
-    os.environ['SAKURA_GGUF_PATH'] = '/Users/liujieliang/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-Q4_K_M.gguf'
-    os.environ['SAKURA_API_BASE'] = 'http://192.168.1.15:11434/v1'
-    os.environ['SAKURA_MODEL'] = 'sakura-14b-qwen2.5-v1.0'
+    os.environ.setdefault('SAKURA_GGUF_PATH', os.path.expanduser('~/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-Q4_K_M.gguf'))
+    os.environ.setdefault('SAKURA_API_BASE', 'http://localhost:11434/v1')
+    os.environ.setdefault('SAKURA_MODEL', 'sakura-14b-qwen2.5-v1.0')
     run_mode("MODE B: Local GGUF")
 
     print("\n" + "=" * 60)

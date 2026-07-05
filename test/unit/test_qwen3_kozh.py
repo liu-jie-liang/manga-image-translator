@@ -26,7 +26,7 @@ class TestQwen3KoZhTranslator:
         translator = Qwen3KoZhTranslator()
         assert translator.model == 'qwen3:14b-q4_k_m'
         base_url = str(translator.client.base_url)
-        assert '192.168.1.15' in base_url
+        assert 'localhost' in base_url or 'ollama' in base_url
         assert 'ollama' in base_url or '/v1' in base_url
 
     def test_init_custom_model(self):

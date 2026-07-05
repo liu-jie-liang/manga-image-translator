@@ -4,7 +4,7 @@ import os, asyncio, time, json, shutil, sys
 
 # Unset GGUF to force Ollama fallback
 os.environ.pop('SAKURA_GGUF_PATH', None)
-os.environ['SAKURA_API_BASE'] = 'http://192.168.1.15:11434/v1'
+os.environ.setdefault('SAKURA_API_BASE', 'http://localhost:11434/v1')
 os.environ['SAKURA_MODEL'] = 'sakura-14b-qwen2.5-v1.0'
 
 import logging

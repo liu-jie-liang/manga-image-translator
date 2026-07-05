@@ -334,7 +334,7 @@ async def batch_translate(root_dir: str, retrans: bool = False, benchmark: bool 
         logger.error('请设置环境变量:')
         logger.error('  方式C: export GALTRANS_GGUF_PATH=/path/to/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf')
         logger.error('  方式B: export SAKURA_GGUF_PATH=/path/to/model.gguf')
-        logger.error('  方式A: export SAKURA_API_BASE=http://192.168.1.15:11434/v1')
+        logger.error('  方式A: export SAKURA_API_BASE=http://<ollama-host>:11434/v1')
         logger.error('=' * 60)
         return
 

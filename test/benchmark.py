@@ -11,7 +11,7 @@ os.environ.setdefault('MANGA_TRANSLATOR_SETTINGS', '{}')
 # ============================================================================
 # Ollama Sakura 配置
 # ============================================================================
-os.environ['SAKURA_API_BASE'] = 'http://192.168.1.15:11434/v1'
+os.environ.setdefault('SAKURA_API_BASE', 'http://localhost:11434/v1')
 os.environ['SAKURA_MODEL'] = 'sakura-14b-qwen2.5-v1.0:latest'
 os.environ['SAKURA_VERSION'] = '0.9'
 
@@ -81,7 +81,7 @@ async def main():
 
     print(f"测试规模: {n_images} 页")
     print(f"翻译器:   sakura (Ollama → sakura-14b-qwen2.5-v1.0:latest)")
-    print(f"Ollama:   http://192.168.1.15:11434")
+    print(f"Ollama:   {os.environ.get('SAKURA_API_BASE', 'http://localhost:11434')}")
     print(f"策略:     use_gpu_limited (det/ocr/inpaint→MPS, 翻译→网络)")
     print()
 
@@ -117,7 +117,7 @@ async def main():
     print("  翻译性能实测报告")
     print("=" * 70)
     print(f"  硬件:     Apple M4 Pro / 64GB / macOS")
-    print(f"  翻译器:   sakura-14b-qwen2.5-v1.0 (Ollama @ 192.168.1.15:11434)")
+    print(f"  翻译器:   sakura-14b-qwen2.5-v1.0 (Ollama @ {os.environ.get('SAKURA_API_BASE', 'localhost:11434')})")
     print(f"  策略:     use_gpu_limited (det/ocr/inpaint→MPS, 翻译→Ollama网络)")
     print(f"  测试页:   {n_images} 页 (第13话日文生肉)")
     print(f"  总耗时:   {total:.1f}s")

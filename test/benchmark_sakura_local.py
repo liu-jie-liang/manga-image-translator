@@ -5,7 +5,7 @@ Usage:
     python test/benchmark.py 30
 
     # 再跑方式B (本地 GGUF 直连 GPU)
-    SAKURA_GGUF_PATH=/Users/liujieliang/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf python test/benchmark_sakura_local.py 30
+    SAKURA_GGUF_PATH=~/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf python test/benchmark_sakura_local.py 30
 """
 import os, sys, time, asyncio, logging, shutil
 from pathlib import Path
@@ -16,7 +16,7 @@ os.environ.setdefault('MANGA_TRANSLATOR_SETTINGS', '{}')
 # ============================================================================
 # 方式B: 本地 GGUF 配置
 # ============================================================================
-DEFAULT_GGUF = '/Users/liujieliang/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf'
+DEFAULT_GGUF = os.path.expanduser('~/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf')
 os.environ['SAKURA_GGUF_PATH'] = os.getenv('SAKURA_GGUF_PATH', DEFAULT_GGUF)
 os.environ['SAKURA_MODEL'] = 'sakura-14b-qwen2.5-v1.0:latest'
 os.environ['SAKURA_VERSION'] = '0.9'
