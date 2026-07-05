@@ -17,7 +17,7 @@
 
 ### 环境要求
 
-- macOS (Apple Silicon) 或 Linux + NVIDIA GPU
+- macOS (Apple Silicon) / Linux (NVIDIA GPU) / Windows (NVIDIA GPU)
 - Python 3.10+
 - 约 10GB 磁盘空间（GGUF 模型文件）
 
@@ -26,22 +26,44 @@
 ```bash
 git clone https://github.com/liu-jie-liang/manga-image-translator.git
 cd manga-image-translator
+```
 
-# 创建虚拟环境
+<details>
+<summary><b>macOS / Linux</b></summary>
+
+```bash
 python -m venv venv
 source venv/bin/activate
-
-# 安装依赖
 pip install -r requirements.txt
 
-# 如需本地 GGUF 翻译（方式B/C），额外安装：
+# GGUF 翻译 (方式B/C):
 #   Apple Silicon: CMAKE_ARGS="-DGGML_METAL=on" pip install -r requirements-gguf.txt
 #   NVIDIA:        CMAKE_ARGS="-DGGML_CUDA=on"   pip install -r requirements-gguf.txt
 #   CPU:           pip install -r requirements-gguf.txt
 
-# 如需 MangaStudio GUI，额外安装：
+# GUI (可选):
 #   pip install -r requirements-gui.txt
 ```
+
+</details>
+
+<details>
+<summary><b>Windows</b></summary>
+
+```cmd
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+:: GGUF 翻译 (方式B/C, NVIDIA GPU):
+::   set CMAKE_ARGS=-DGGML_CUDA=on
+::   pip install -r requirements-gguf.txt
+
+:: GUI (可选):
+::   pip install -r requirements-gui.txt
+```
+
+</details>
 
 ### 启动
 
@@ -68,6 +90,9 @@ pip install -r requirements.txt
 
 或命令行：
 
+<details>
+<summary><b>macOS / Linux (bash/zsh)</b></summary>
+
 ```bash
 # 方式B — Sakura GGUF 直连
 export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
@@ -82,6 +107,28 @@ python -m manga_translator.batch
 export RETRANS=false
 python -m manga_translator.batch
 ```
+
+</details>
+
+<details>
+<summary><b>Windows (CMD)</b></summary>
+
+```cmd
+:: 方式B — Sakura GGUF 直连
+set SAKURA_GGUF_PATH=%USERPROFILE%\.ollama\models\gguf\sakura-14b-qwen2.5-v1.0-q4_k_m.gguf
+python -m manga_translator.batch
+
+:: 方式C — Galtransl GGUF 直连 (R18友好)
+set GALTRANS_GGUF_PATH=%USERPROFILE%\.ollama\models\gguf\Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf
+set TRANSLATOR_MODE=galtransl
+python -m manga_translator.batch
+
+:: 续传模式（跳过已翻译）
+set RETRANS=false
+python -m manga_translator.batch
+```
+
+</details>
 
 ## 性能数据
 
@@ -132,9 +179,9 @@ python -m manga_translator.batch
 # 单元测试 (16/16 PASS)
 python -m pytest test/unit/ -v
 
-# 场景化端到端测试
-SAKURA_GGUF_PATH=... python test/e2e_gguf_2img.py         # 方式B
-TRANSLATOR_MODE=galtransl GALTRANS_GGUF_PATH=... python test/e2e_galtransl_2img.py  # 方式C
+# 场景化端到端测试 (需要先设置模型路径环境变量)
+python test/e2e_gguf_2img.py         # 方式B
+python test/e2e_galtransl_2img.py    # 方式C
 ```
 
 ## 环境变量
@@ -179,7 +226,13 @@ TRANSLATOR_MODE=galtransl GALTRANS_GGUF_PATH=... python test/e2e_galtransl_2img.
 |------|------|--------|
 | `CONDA_ENV` | conda 环境名（启动脚本使用） | `manga-translator` |
 
-> 示例：`SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"`
+> **设置环境变量示例：**
+>
+> | Shell | 语法 |
+> |-------|------|
+> | bash/zsh | `export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/..."` |
+> | CMD | `set SAKURA_GGUF_PATH=%USERPROFILE%\.ollama\models\gguf\...` |
+> | PowerShell | `$env:SAKURA_GGUF_PATH = "$env:USERPROFILE\.ollama\models\gguf\..."` |
 
 ## 文档
 

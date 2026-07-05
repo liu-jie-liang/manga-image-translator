@@ -6,7 +6,10 @@ from typing import Union, List
 import time  
 
 from PIL import Image
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 from manga_translator import MangaTranslator, Context, TranslationInterrupt, Config
 from ..save import save_result

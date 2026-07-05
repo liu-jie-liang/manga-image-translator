@@ -12,9 +12,19 @@ if not defined SAKURA_API_BASE set SAKURA_API_BASE=http://localhost:11434/v1
 set SAKURA_MODEL=sakura-14b-qwen2.5-v1.0
 :: ─── 翻译器配置结束 ───────────────────────────────────────────────────────────
 
-:: 激活 conda 环境
+:: 激活 Python 环境（conda 优先，不存在则尝试 venv）
 if not defined CONDA_ENV set CONDA_ENV=manga-translator
-call conda activate %CONDA_ENV% 2>nul
+where conda >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    call conda activate %CONDA_ENV%
+) else (
+    if exist "venv\Scripts\activate.bat" (
+        call venv\Scripts\activate.bat
+        echo [INFO] 使用 venv 环境
+    ) else (
+        echo [WARN] 未检测到 conda 或 venv，使用系统 Python
+    )
+)
 
 echo ============================================
 echo   日中漫画批量翻译工具

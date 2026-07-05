@@ -8,7 +8,7 @@
 |------|------|---------|---------|
 | macOS | `start-scripts/macos/` | `.command` | Finder 双击 |
 | Linux | `start-scripts/linux/` | `.sh` | 终端运行 `bash xxx.sh` |
-| Windows | `start-scripts/windows/` | `.bat` | 双击运行 |
+| Windows | `start-scripts/windows/` | `.bat` | 双击运行（自动检测 conda，不存在则使用 venv） |
 
 共提供 6 个功能变体：
 

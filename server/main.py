@@ -274,7 +274,8 @@ def start_translator_client_proc(host: str, port: int, nonce: str, params: Names
         sys.exit(0)
 
     signal.signal(signal.SIGINT, handle_exit_signals)
-    signal.signal(signal.SIGTERM, handle_exit_signals)
+    if hasattr(signal, 'SIGTERM'):  # SIGTERM not available on Windows
+        signal.signal(signal.SIGTERM, handle_exit_signals)
 
     return proc
 

@@ -310,7 +310,7 @@ class ModelWrapper(ABC):
     def _grant_execute_permissions(self, map_key: str):
         mapping = self._MODEL_MAPPING[map_key]
 
-        if sys.platform == 'linux':
+        if sys.platform != 'win32':  # Unix (Linux/macOS): grant execute permissions
             # Grant permission to executables
             for file in mapping.get('executables', []):
                 p = self._get_file_path(file)

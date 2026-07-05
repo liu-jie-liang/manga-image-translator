@@ -29,6 +29,8 @@ class MangaTranslatorWS(MangaTranslator):
         import websockets
         from ..server import ws_pb2
 
+        if sys.platform == 'win32':
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         self._server_loop = asyncio.new_event_loop()
         self.task_lock = PriorityLock()
         self.counter = 0
