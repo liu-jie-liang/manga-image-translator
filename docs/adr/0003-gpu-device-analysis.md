@@ -6,7 +6,7 @@
 
 ## 设备分配现状
 
-代码入口：[manga_translator.py#L290](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/manga_translator/manga_translator.py#L290)
+代码入口：[manga_translator.py#L290](../../manga_translator/manga_translator.py#L290)
 
 ```python
 device = 'mps' if torch.backends.mps.is_available() else 'cuda'
@@ -65,7 +65,7 @@ MPS (Metal Performance Shaders) 在 PyTorch 上存在已知稳定性问题：
 
 ### 当前项目的 MPS 清理代码
 
-[local.py#L55-L71](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/manga_translator/mode/local.py#L55-L71) 已有 `force_cleanup()`，但只处理 CUDA：
+[local.py#L55-L71](../../manga_translator/mode/local.py#L55-L71) 已有 `force_cleanup()`，但只处理 CUDA：
 
 ```python
 def force_cleanup():
@@ -95,5 +95,5 @@ def force_cleanup():
 
 ## 参考资料
 
-- 设备检测代码：[manga_translator.py#L288-L300](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/manga_translator/manga_translator.py#L288-L300)
-- 现有清理代码：[local.py#L55-L71](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/manga_translator/mode/local.py#L55-L71)
+- 设备检测代码：[manga_translator.py#L288-L300](../../manga_translator/manga_translator.py#L288-L300)
+- 现有清理代码：[local.py#L55-L71](../../manga_translator/mode/local.py#L55-L71)

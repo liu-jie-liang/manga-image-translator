@@ -7,10 +7,10 @@
 ## 背景
 
 当前项目测试覆盖极低：
-- [test_translation.py](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/test/test_translation.py) — 仅4个pytest用例，且依赖真实API Key
-- [test_translation_manual.py](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/test/test_translation_manual.py) — 手动测试脚本，非自动化
-- [test_textline_merge.py](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/test/test_textline_merge.py) — 有测试但只有1个
-- [test_render.py](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/test/test_render.py) — 渲染测试
+- [test_translation.py](../../test/test_translation.py) — 仅4个pytest用例，且依赖真实API Key
+- [test_translation_manual.py](../../test/test_translation_manual.py) — 手动测试脚本，非自动化
+- [test_textline_merge.py](../../test/test_textline_merge.py) — 有测试但只有1个
+- [test_render.py](../../test/test_render.py) — 渲染测试
 
 缺乏对核心翻译管道、滑动窗口逻辑的单元测试。
 
@@ -240,5 +240,5 @@ pytest test/unit/ --cov=manga_translator/sliding_window --cov-report=html
 
 ## 参考资料
 
-- 现有测试：[test_translation.py](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/test/test_translation.py)
+- 现有测试：[test_translation.py](../../test/test_translation.py)
 - pytest-asyncio: https://pytest-asyncio.readthedocs.io/

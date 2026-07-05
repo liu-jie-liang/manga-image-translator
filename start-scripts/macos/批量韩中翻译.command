@@ -8,13 +8,13 @@
 #
 # ─── 翻译器配置 ───────────────────────────────────────────────────────────────
 # 翻译方式: Qwen3 14B via Ollama HTTP
-#   - Ollama 服务地址: 192.168.1.15:11434
+#   - Ollama 服务地址: <OLLAMA_HOST>:11434
 #   - 模型: qwen3:14b-q4_k_m
 #   - 无降级链，Ollama 不可达时报错退出
 # ──────────────────────────────────────────────────────────────────────────────
 
 # Ollama 环境变量
-export CUSTOM_OPENAI_API_BASE='http://192.168.1.15:11434/v1'
+export CUSTOM_OPENAI_API_BASE="${CUSTOM_OPENAI_API_BASE:-http://localhost:11434/v1}"
 export CUSTOM_OPENAI_MODEL='qwen3:14b-q4_k_m'
 export CUSTOM_OPENAI_API_KEY='ollama'
 

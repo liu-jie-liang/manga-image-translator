@@ -125,5 +125,5 @@ LLM 返回结果同样为 `<|N|>` 标注，按 ID 号映射回对应页的文本
 
 ## 参考资料
 
-- 现有上下文拼接机制：[manga_translator.py#L920-L1000](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/manga_translator/manga_translator.py#L920-L1000)
-- 翻译调度入口：[manga_translator.py#L1070-L1090](file:///Users/liujieliang/Downloads/GitHub/manga-image-translator/manga_translator/manga_translator.py#L1070-L1090)
+- 现有上下文拼接机制：[manga_translator.py#L920-L1000](../../manga_translator/manga_translator.py#L920-L1000)
+- 翻译调度入口：[manga_translator.py#L1070-L1090](../../manga_translator/manga_translator.py#L1070-L1090)

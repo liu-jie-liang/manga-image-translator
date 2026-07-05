@@ -65,7 +65,7 @@ export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_
 export GALTRANS_GGUF_PATH="$HOME/.ollama/models/gguf/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf"
 
 # 方式A (降级): Ollama HTTP 远程服务
-export SAKURA_API_BASE='http://192.168.1.15:11434/v1'
+export SAKURA_API_BASE='http://localhost:11434/v1'
 export SAKURA_MODEL='sakura-14b-qwen2.5-v1.0'
 ```
 
