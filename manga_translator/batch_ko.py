@@ -155,8 +155,7 @@ async def _translate_directory(dir_path: str, dest_dir: str, retrans: bool):
     translator = _get_translator()
     params = dict(BATCH_PARAMS)
     params['retrans'] = retrans
-    if retrans:
-        params['overwrite'] = True
+    params['overwrite'] = True  # Always overwrite existing files
     logger.info(f'Translating directory: {dir_path}')
     await translator.translate_path(dir_path, dest_dir, params)
 
@@ -280,9 +279,17 @@ def main():
             continue
         break
 
-    # Retranslate?
-    retrans_input = input('是否重新翻译整个目录？(清空所有进度记录) [y/N]: ').strip().lower()
-    retrans = retrans_input in ('y', 'yes')
+    # Retranslate? (override via RETRANS env var)
+    retrans_env = os.environ.get('RETRANS', '').strip().lower()
+    if retrans_env in ('true', '1', 'yes'):
+        retrans = True
+        print('> 环境变量 RETRANS=true → 全量重新翻译')
+    elif retrans_env in ('false', '0', 'no'):
+        retrans = False
+        print('> 环境变量 RETRANS=false → 续传模式')
+    else:
+        retrans_input = input('是否重新翻译整个目录？(清空所有进度记录) [y/N]: ').strip().lower()
+        retrans = retrans_input in ('y', 'yes')
 
     print()
     print(f'源目录: {os.path.abspath(dir_path)}')
