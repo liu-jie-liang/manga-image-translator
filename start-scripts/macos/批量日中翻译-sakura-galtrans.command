@@ -16,7 +16,7 @@ export TRANSLATOR_MODE="galtransl"
 
 # 激活 conda 环境
 source ~/.zshrc 2>/dev/null || source ~/.bashrc 2>/dev/null
-conda activate ${CONDA_ENV:-TraeAI-2} 2>/dev/null
+conda activate ${CONDA_ENV:-manga-translator} 2>/dev/null
 
 echo "============================================"
 echo "  日中漫画批量翻译工具"

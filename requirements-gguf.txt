@@ -1,0 +1,6 @@
+# 本地 GGUF 翻译依赖（方式B/C）
+# 安装前先按平台设好 CMAKE_ARGS：
+#   Apple Silicon:  CMAKE_ARGS="-DGGML_METAL=on"
+#   NVIDIA GPU:    CMAKE_ARGS="-DGGML_CUDA=on"
+#   CPU only:      直接 pip install 即可
+llama-cpp-python

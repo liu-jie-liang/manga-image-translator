@@ -1,0 +1,3 @@
+# MangaStudio GUI 依赖（可选）
+PySide6>=6.5.0
+Pillow>=10.0.0

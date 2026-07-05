@@ -11,7 +11,7 @@ set RETRANS=false
 set BENCHMARK=false
 
 :: 激活 conda 环境
-if not defined CONDA_ENV set CONDA_ENV=TraeAI-2
+if not defined CONDA_ENV set CONDA_ENV=manga-translator
 call conda activate %CONDA_ENV% 2>nul
 
 echo ============================================

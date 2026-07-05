@@ -1,5 +1,4 @@
 # vim: ft=requirements
-ipykernel==6.29.5
 pylint==3.3.0
 pytest-sugar==0.9.6
 pytest-xdist==3.3.1

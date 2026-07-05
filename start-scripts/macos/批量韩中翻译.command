@@ -3,7 +3,7 @@
 # 韩中漫画批量翻译 — 双击启动脚本
 # ═══════════════════════════════════════════════════════════════════════════════
 #
-# 使用前请确保已配置好 conda 环境 TraeAI-2
+# 使用前请确保已配置好 conda 环境 manga-translator
 # 使用前请确保 Ollama 服务已启动且已拉取 qwen3:14b-q4_k_m 模型
 #
 # ─── 翻译器配置 ───────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ export CUSTOM_OPENAI_API_KEY='ollama'
 
 # 激活 conda 环境
 source ~/.zshrc 2>/dev/null || source ~/.bashrc 2>/dev/null
-conda activate ${CONDA_ENV:-TraeAI-2} 2>/dev/null
+conda activate ${CONDA_ENV:-manga-translator} 2>/dev/null
 
 echo "启动韩中漫画批量翻译..."
 echo "翻译器: Qwen3 14B (Ollama) — 韩文→简体中文"

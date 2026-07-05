@@ -13,7 +13,7 @@ set SAKURA_MODEL=sakura-14b-qwen2.5-v1.0
 :: ─── 翻译器配置结束 ───────────────────────────────────────────────────────────
 
 :: 激活 conda 环境
-if not defined CONDA_ENV set CONDA_ENV=TraeAI-2
+if not defined CONDA_ENV set CONDA_ENV=manga-translator
 call conda activate %CONDA_ENV% 2>nul
 
 echo ============================================

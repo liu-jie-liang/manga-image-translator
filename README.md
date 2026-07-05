@@ -31,11 +31,16 @@ cd manga-image-translator
 python -m venv venv
 source venv/bin/activate
 
-# Metal 版 llama-cpp（Apple Silicon）
-CMAKE_ARGS="-DGGML_METAL=on" pip install llama-cpp-python
-
-# 安装其他依赖
+# 安装依赖
 pip install -r requirements.txt
+
+# 如需本地 GGUF 翻译（方式B/C），额外安装：
+#   Apple Silicon: CMAKE_ARGS="-DGGML_METAL=on" pip install -r requirements-gguf.txt
+#   NVIDIA:        CMAKE_ARGS="-DGGML_CUDA=on"   pip install -r requirements-gguf.txt
+#   CPU:           pip install -r requirements-gguf.txt
+
+# 如需 MangaStudio GUI，额外安装：
+#   pip install -r requirements-gui.txt
 ```
 
 ### 启动
@@ -172,7 +177,7 @@ TRANSLATOR_MODE=galtransl GALTRANS_GGUF_PATH=... python test/e2e_galtransl_2img.
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `CONDA_ENV` | conda 环境名（启动脚本使用） | `TraeAI-2` |
+| `CONDA_ENV` | conda 环境名（启动脚本使用） | `manga-translator` |
 
 > 示例：`SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"`
 

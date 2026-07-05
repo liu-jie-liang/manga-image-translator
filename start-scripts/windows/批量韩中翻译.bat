@@ -10,7 +10,7 @@ set CUSTOM_OPENAI_MODEL=qwen3:14b-q4_k_m
 set CUSTOM_OPENAI_API_KEY=ollama
 
 :: 激活 conda 环境
-if not defined CONDA_ENV set CONDA_ENV=TraeAI-2
+if not defined CONDA_ENV set CONDA_ENV=manga-translator
 call conda activate %CONDA_ENV% 2>nul
 
 echo 启动韩中漫画批量翻译...
