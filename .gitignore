@@ -51,6 +51,11 @@ MANIFEST
 # Benchmark results
 /test/results/
 
+# Test image materials (copyright-sensitive, user provides own)
+/test/e2e-materials/
+/test/e2e-materials 汉化/
+/test/materials/
+
 # SSL Used for running server locally
 cert.pem
 key.pem
