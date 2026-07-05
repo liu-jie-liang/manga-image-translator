@@ -1,5 +1,26 @@
 # 日中漫画批量翻译 操作指南
 
+## 快速启动
+
+根据你的操作系统，在 `start-scripts/` 目录下找到对应的启动脚本：
+
+| 平台 | 目录 | 文件格式 | 启动方式 |
+|------|------|---------|---------|
+| macOS | `start-scripts/macos/` | `.command` | Finder 双击 |
+| Linux | `start-scripts/linux/` | `.sh` | 终端运行 `bash xxx.sh` |
+| Windows | `start-scripts/windows/` | `.bat` | 双击运行 |
+
+共提供 6 个功能变体：
+
+| 脚本 | 翻译器 | 模式 | 说明 |
+|------|--------|------|------|
+| `批量日中翻译` | 交互选择 | a/b 选择 | **推荐首次使用**，运行时选择降级或 Galtransl |
+| `批量日中翻译-sakura-qwen3` | Sakura Qwen2.5 | degraded | B→A 降级，优先 GGUF |
+| `批量日中翻译-sakura-galtrans` | Galtransl 14B | galtransl | 方式C，R18 友好 |
+| `批量日中翻译-sakura-galtrans-全量翻译` | Galtransl 14B | galtransl + RETRANS=true | 全部重新翻译 |
+| `批量日中翻译-sakura-galtrans-续传翻译` | Galtransl 14B | galtransl + RETRANS=false | 仅翻译新增图片 |
+| `批量韩中翻译` | Qwen3 14B | Ollama HTTP | 韩文→简体中文 |
+
 ## 翻译器选择
 
 启动时双击 `start-scripts/macos/` 目录下对应的 `.command` 脚本（macOS），或 `start-scripts/linux/*.sh`（Linux），或 `start-scripts/windows/*.bat`（Windows），会提示选择翻译模式：

@@ -48,7 +48,18 @@ pip install -r requirements.txt
 | Linux | `start-scripts/linux/` | `.sh` 文件 |
 | Windows | `start-scripts/windows/` | `.bat` 文件 |
 
-首次使用推荐 `批量日中翻译.command`（交互式选择翻译模式）。
+首次使用推荐 `批量日中翻译`（交互式选择翻译模式）。
+
+6 个启动脚本供选择：
+
+| 脚本名 | 翻译器 | 特点 |
+|--------|--------|------|
+| `批量日中翻译` | 交互选择 a/b | 运行时选择降级或 Galtransl |
+| `批量日中翻译-sakura-qwen3` | Sakura Qwen2.5 | B→A 降级，优先 GGUF |
+| `批量日中翻译-sakura-galtrans` | Galtransl 14B | 方式C，R18 友好 |
+| `批量日中翻译-sakura-galtrans-全量翻译` | Galtransl 14B | 全部重新翻译 |
+| `批量日中翻译-sakura-galtrans-续传翻译` | Galtransl 14B | 仅翻译新增图片 |
+| `批量韩中翻译` | Qwen3 14B | 韩文→简体中文 |
 
 或命令行：
 
