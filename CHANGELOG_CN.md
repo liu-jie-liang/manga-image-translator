@@ -4,7 +4,7 @@
 
 1. 新增方式C翻译器：集成 Sakura-GalTransl-14B-v3.8 本地 GGUF 模型，专为视觉小说/Galgame 翻译优化
 2. 优化 Sakura 翻译器 Prompt，添加越狱提示以支持 R18 内容直接翻译，不再返回空白
-3. 批量翻译入口（`scripts/macos/*.command`）新增交互式翻译模式选择：降级方式 (B→A) 或 方式C (Galtransl)
+3. 批量翻译入口（`start-scripts/macos/*.command`）新增交互式翻译模式选择：降级方式 (B→A) 或 方式C (Galtransl)
 4. 方式C 不可用时不会降级到其他方式，直接报错提示用户
 5. 新增 `test/e2e_galtransl.py` 端到端测试脚本
 6. 新增 `test/unit/test_galtransl_local.py` 单元测试

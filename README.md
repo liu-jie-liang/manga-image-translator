@@ -44,9 +44,9 @@ pip install -r requirements.txt
 
 | 平台 | 启动目录 | 双击即可运行 |
 |------|---------|-------------|
-| macOS | `scripts/macos/` | `.command` 文件 |
-| Linux | `scripts/linux/` | `.sh` 文件 |
-| Windows | `scripts/windows/` | `.bat` 文件 |
+| macOS | `start-scripts/macos/` | `.command` 文件 |
+| Linux | `start-scripts/linux/` | `.sh` 文件 |
+| Windows | `start-scripts/windows/` | `.bat` 文件 |
 
 首次使用推荐 `批量日中翻译.command`（交互式选择翻译模式）。
 

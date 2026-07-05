@@ -2,7 +2,7 @@
 
 ## 翻译器选择
 
-启动时双击 `scripts/macos/` 目录下对应的 `.command` 脚本（macOS），或 `scripts/linux/*.sh`（Linux），或 `scripts/windows/*.bat`（Windows），会提示选择翻译模式：
+启动时双击 `start-scripts/macos/` 目录下对应的 `.command` 脚本（macOS），或 `start-scripts/linux/*.sh`（Linux），或 `start-scripts/windows/*.bat`（Windows），会提示选择翻译模式：
 
 ```
 请选择翻译模式:
