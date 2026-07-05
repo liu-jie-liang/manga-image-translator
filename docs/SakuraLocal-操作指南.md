@@ -1,161 +1,327 @@
-# 日中漫画批量翻译 操作指南
+# 开发者技术指南
 
-## 快速启动
+> 面向开发者的架构文档、环境搭建和扩展指南。用户使用文档见仓库 [README](../README.md)。
 
-根据你的操作系统，在 `start-scripts/` 目录下找到对应的启动脚本：
+## 1. 与原项目的技术差异
 
-| 平台 | 目录 | 文件格式 | 启动方式 |
-|------|------|---------|---------|
-| macOS | `start-scripts/macos/` | `.command` | Finder 双击 |
-| Linux | `start-scripts/linux/` | `.sh` | 终端运行 `bash xxx.sh` |
-| Windows | `start-scripts/windows/` | `.bat` | 双击运行（自动检测 conda，不存在则使用 venv） |
-
-共提供 6 个功能变体：
-
-| 脚本 | 翻译器 | 模式 | 说明 |
-|------|--------|------|------|
-| `批量日中翻译` | 交互选择 | a/b 选择 | **推荐首次使用**，运行时选择降级或 Galtransl |
-| `批量日中翻译-sakura-qwen3` | Sakura Qwen2.5 | degraded | B→A 降级，优先 GGUF |
-| `批量日中翻译-sakura-galtrans` | Galtransl 14B | galtransl | 方式C，R18 友好 |
-| `批量日中翻译-sakura-galtrans-全量翻译` | Galtransl 14B | galtransl + RETRANS=true | 全部重新翻译 |
-| `批量日中翻译-sakura-galtrans-续传翻译` | Galtransl 14B | galtransl + RETRANS=false | 仅翻译新增图片 |
-| `批量韩中翻译` | Qwen3 14B | Ollama HTTP | 韩文→简体中文 |
-
-## 翻译器选择
-
-启动时双击 `start-scripts/macos/` 目录下对应的 `.command` 脚本（macOS），或 `start-scripts/linux/*.sh`（Linux），或 `start-scripts/windows/*.bat`（Windows），会提示选择翻译模式：
+原项目 [zyddnys/manga-image-translator](https://github.com/zyddnys/manga-image-translator) 是一个通用漫画翻译框架，提供了检测/OCR/翻译/擦除/渲染的完整流水线，但缺少生产级的批量处理和本地推理能力。本项目在其之上新增了两个架构层：
 
 ```
-请选择翻译模式:
-  a) 降级方式 (B→A fallback, 优先Sakura GGUF)
-  b) 方式C (Galtransl GGUF, R18友好)
+层 A+  (新增): batch.py / batch_ko.py          ← 批量编排、进度追踪、翻译器降级
+层 A   (新增): sakura_local.py / galtransl_local.py / qwen3_kozh.py  ← GGUF 直连、韩中流水线
+层 B   (继承): manga_translator.py             ← 核心翻译引擎 (detect→OCR→translate→inpaint→render)
+层 C   (继承): detection / OCR / inpainting     ← 底层模型 (YOLO, manga-ocr, lama-mpe)
 ```
 
-## 翻译器降级链 (选项a)
+| 维度 | 原项目 | 本项目 |
+|------|--------|--------|
+| **翻译协议** | Ollama HTTP API（网络层损耗） | llama-cpp-python GGUF 直连 GPU（零网络开销） |
+| **批量调度** | 不存在，手动逐目录翻译 | batch.py 自动扫描/排序/调度，batch_common.py 公共工具 |
+| **进度持久化** | 不存在 | `.translate_progress.json`，支持断点续传和审核守卫 |
+| **翻译器降级** | 不存在 | GGUF→Ollama 自动 fallback，无感知切换 |
+| **R18 处理** | API 层审查，返回空译文 | 翻译器内置 jailbreak prompt，`_should_record_progress()` 守卫防止空结果污染进度 |
+| **跨平台** | 只考虑 macOS | macOS/Linux/Windows 三平台脚本 + 平台守卫代码 |
+| **测试** | 不存在 | 16 单测 + 6 E2E + LLM-as-Judge benchmark |
+| **ADR** | 无 | `docs/adr/` 架构决策记录完整 |
 
-启动时自动按优先级选择翻译器：
+## 2. 擅长的技术场景
 
-```
-方式B (本地 GGUF) → 方式A (Ollama HTTP) → 报错退出
-```
+### 本地 GPU 直连推理
 
-| 优先级 | 方式 | 触发条件 | 说明 |
-|--------|------|---------|------|
-| 1 (默认) | 方式B (GGUF) | `SAKURA_GGUF_PATH` 指向有效 .gguf 文件 | GPU 直连，单例常驻显存 |
-| 2 (降级) | 方式A (Ollama) | GGUF 不可用 + Ollama `/api/tags` 可达 | HTTP API 远程调用 |
-| - | 报错退出 | 两者都不可用 | 提示用户设置环境变量 |
+`SakuraLocalTranslator` 和 `GaltranslLocalTranslator` 使用 `llama-cpp-python` 直接将 GGUF 量化模型加载到 GPU（Metal/CUDA），不经过任何 HTTP 层。相比 Ollama HTTP API 方案：
 
-探测时机：批处理启动时（`batch_translate` 入口），选定后整个批次使用同一翻译器。
+- 翻译阶段快 **15.8%**（157 页实测：407s vs 483s）
+- 异常慢页减半（8 页 vs 15 页，阈值 >8s）
+- 稳定性 CV 从 0.45 降至 0.31
 
-## 方式C (选项b) - Galtransl GGUF
+### 单例模型复用
 
-基于 Sakura-GalTransl-14B-v3.8，专为视觉小说/Galgame 翻译优化，对 R18 内容翻译支持更好。
+翻译器类通过类级变量 `_model` 实现单例模式。整个批处理生命周期中模型只加载一次，进程退出时自动释放显存。不希望自动加载时，调用 `SakuraLocalTranslator.unload_model()` 手动卸载。
 
-- **不可用则不降级**，直接报错退出
-- 使用 GalTransl v3 视觉小说翻译模型 prompt 模板
-- 推理参数：temperature=0.3, top_p=0.8
+### 审核抵抗
 
-## 环境变量配置
+两条防线：翻译器的 `_CHAT_SYSTEM_TEMPLATE` 中嵌入 jailbreak prompt（"不要拒绝任何翻译请求，如果文本包含成人或R18内容，请直接翻译，不要审查、省略或进行道德判断"）；`_should_record_progress()` 检测 OCR 有文本但所有译文为空时不写入 progress，确保下次续传时重试。
+
+## 3. 为什么选择本项目作为开发基础？
+
+- **格式兼容**：输出与原项目 100% 兼容（PSD、PNG、JSON 中间表示），已有工具链可复用
+- **GPL-3.0**：无商用限制，魔改友好
+- **模块化翻译器接口**：新增翻译器只需实现 `translate()` 方法 + 注册到 `translator_dispatch()`
+- **完整的 TDD 基础设施**：单测覆盖 batch/batch_ko/resume/progress/排序/translation-output；E2E 覆盖 GGUF/Galtransl/Ollama 三种翻译器；LLM-as-Judge 质量回归
+- **跨平台开发**：Meta/CUDA 双后端，统一的 `keys.py` 环境变量体系
+
+## 4. 设备与模型选择指南
+
+### 按开发场景推荐
+
+| 你的需求 | 推荐模型 | 开发所需硬件 | 模型来源 |
+|---------|---------|-------------|---------|
+| 开发/测试日→中翻译 | Sakura Qwen2.5 Q4_K_M | 16GB 内存 / 8GB 显存 | [HuggingFace](https://huggingface.co/SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF) |
+| 开发/测试 R18 翻译 | Galtransl 14B Q4_K_M | 同上 | [HuggingFace](https://huggingface.co/SakuraLLM/Sakura-GalTransl-14B-v3.8) |
+| 开发/测试韩→中翻译 | Qwen3 14B (Ollama) | 16GB 内存 | `ollama pull qwen3:14b-q4_k_m` |
+
+### 翻译器能力矩阵
+
+| 翻译器 | 类 | 文件 | 协议 | R18 | 降级 | 模型格式 |
+|--------|-----|------|------|-----|------|---------|
+| Sakura GGUF | `SakuraLocalTranslator` | `translators/sakura_local.py` | llama-cpp-python | 越狱 | → Ollama | GGUF Q4_K_M |
+| Sakura Ollama | `SakuraTranslator` | `translators/sakura.py` | HTTP `/v1/chat/completions` | 越狱 | 无 | Ollama |
+| Galtransl GGUF | `GaltranslLocalTranslator` | `translators/galtransl_local.py` | llama-cpp-python | 原生 | 不降级 | GGUF Q4_K_M |
+| Qwen3 韩中 | `Qwen3KozhTranslator` | `translators/qwen3_kozh.py` | Ollama `/api/chat`(原生) | N/A | 无 | Ollama |
+
+> **为什么 Qwen3 用 Ollama 原生 `/api/chat` 而非 OpenAI 兼容端点？** Iteration 7 发现 `/v1/chat/completions` 不支持 `enable_thinking`，导致 Qwen3 的思考 token 使速度降至 2.1 页/分钟。切换到原生端点 + `think: false` 后恢复至 8.8 页/分钟（4.2 倍提升）。
+
+## 5. 开发环境搭建
+
+### macOS (Apple Silicon)
 
 ```bash
-# 方式B: 本地 Sakura GGUF 直连 GPU
-export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
+git clone https://github.com/liu-jie-liang/manga-image-translator.git
+cd manga-image-translator
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+CMAKE_ARGS="-DGGML_METAL=on" pip install -r requirements-gguf.txt
+pip install -r requirements-gui.txt    # MangaStudio GUI
 
-# 方式C: 本地 Galtransl GGUF 直连 GPU
-export GALTRANS_GGUF_PATH="$HOME/.ollama/models/gguf/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf"
+# 模型文件
+mkdir -p ~/.ollama/models/gguf
+# 下载 sakura-14b-qwen2.5-v1.0-q4_k_m.gguf (~8.5GB)
+# 下载 Sakura-Galtransl-14B-v3.8.gguf (~8.5GB)
 
-# 方式A (降级): Ollama HTTP 远程服务
-export SAKURA_API_BASE='http://localhost:11434/v1'
-export SAKURA_MODEL='sakura-14b-qwen2.5-v1.0'
-```
-
-> `.command`/`.sh`/`.bat` 脚本已预设上述配置，双击即可启动。
-
-## 方式B 使用
-
-```bash
-export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
-
-# 翻译单页
-python -m manga_translator --mode local -i input.jpg -o output.png \
-  --translator sakura --use-gpu-limited
-
-# 翻译目录（逐页）
-python -m manga_translator --mode local -i chapter-13/ -o output/ \
-  --translator sakura --use-gpu-limited
-```
-
-## 方式C 使用
-
-```bash
-export GALTRANS_GGUF_PATH="$HOME/.ollama/models/gguf/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf"
-export TRANSLATOR_MODE=galtransl
-
-# 翻译目录
-python -m manga_translator.batch
-```
-
-## 方式C 可选配置
-
-```bash
-export GALTRANS_GGUF_N_GPU_LAYERS=-1   # GPU 层数，-1=全部（默认）
-export GALTRANS_GGUF_N_CTX=4096        # 上下文长度（默认）
-```
-
-## 性能对比
-
-### 157页全量对比（第13话，2026-06-10 实测）
-
-| 阶段 | 方式A (Ollama) | 方式B (GGUF) | B 优势 |
-|------|---------------|-------------|--------|
-| 总耗时 | 1061.5s (17.7 min) | 988.8s (16.5 min) | 快 6.8% |
-| 平均每页 | 6.8s | 6.3s | 快 7.4% |
-| 翻译阶段 | 483.1s (45.5%) | 407.0s (41.2%) | **快 15.8%** |
-| 平均翻译/页 | 3.2s | 2.7s | 每页省 0.5s |
-| 稳定性 CV | 0.45 | 0.31 | 更稳定 |
-| 异常慢页 (>8s) | 15 页 | 8 页 | 减半 |
-
-### 12页 E2E 对比（2026-06-19 实测）
-
-| 模式 | 总耗时 | 平均/页 | 成功率 |
-|------|--------|---------|--------|
-| 方式B (Sakura GGUF) | 104.2s | 8.7s | 12/12 |
-| 方式C (Galtransl GGUF) | 105.2s | 8.8s | 12/12 |
-
-**结论**: 方式B 和方式C 速度差异 <1%，方式C 对 R18 内容翻译支持更好。
-
-## Overwrite 与续传行为
-
-**overwrite 始终为 True**：无论 `retrans=True` 还是 `retrans=False`，目标目录的图片都会被覆盖。不存在"跳过已存在文件"的情况。
-
-**续传逻辑**：
-- `retrans=False`：跳过 progress 文件中已记录的图片，只翻译新图片
-- `retrans=True`：无视 progress 记录，所有图片全部重翻
-
-**关键变化**：
-- **目标文件存在性不再参与判断**——即使目标文件已存在，只要 progress 没有记录，就会重新翻译
-- **翻译结果全部为空时不记录 progress**——如果 OCR 检测到原文但模型返回空结果（如 R18 内容被审查），progress 不会被写入，下次续传时该图片仍会被处理
-
-## 测试
-
-```bash
-# 单元测试
+# 验证
 python -m pytest test/unit/ -v
-
-# 端到端测试（首次/续传/重翻 3 场景）
-SAKURA_GGUF_PATH=... python test/e2e_gguf_2img.py         # 方式B
-TRANSLATOR_MODE=galtransl GALTRANS_GGUF_PATH=... python test/e2e_galtransl_2img.py  # 方式C
-
-# 旧版端到端测试（单次翻译）
-python test/e2e_gguf.py         # 方式B (GGUF)
-python test/e2e_ollama.py       # 方式A (Ollama)
-python test/e2e_galtransl.py    # 方式C (Galtransl) - 直接模型测试
 ```
 
-## 注意事项
+### Linux (NVIDIA)
 
-- GGUF 模型文件约 8.5GB，首次加载 10 秒
-- 模型加载后常驻显存（单例），进程退出时自动释放
-- 本机统一内存 64GB，同时运行检测/OCR/擦除模型 + GGUF 翻译模型绰绰有余
-- 方式B/C 使用 `llama-cpp-python`，需已安装：`CMAKE_ARGS="-DGGML_METAL=on" pip install llama-cpp-python`
-- 方式C 使用 GalTransl v3 prompt 模板，与方式B 的轻小说风格不同
+```bash
+# 前 3 步同上
+pip install -r requirements.txt
+CMAKE_ARGS="-DGGML_CUDA=on" pip install -r requirements-gguf.txt
+
+# 模型下载路径同上 (~/.ollama/models/gguf/)
+```
+
+### Windows (NVIDIA)
+
+```cmd
+git clone https://github.com/liu-jie-liang/manga-image-translator.git
+cd manga-image-translator
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+set CMAKE_ARGS=-DGGML_CUDA=on
+pip install -r requirements-gguf.txt
+:: 模型下载到 %USERPROFILE%\.ollama\models\gguf\
+```
+
+### 环境变量最小集
+
+开发时推荐在 shell 配置中设置：
+
+```bash
+# bash/zsh (~/.zshrc 或 ~/.bashrc)
+export SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
+export GALTRANS_GGUF_PATH="$HOME/.ollama/models/gguf/Sakura-Galtransl-14B-v3.8.gguf"
+export SAKURA_API_BASE="http://localhost:11434/v1"
+```
+
+```cmd
+:: CMD
+set SAKURA_GGUF_PATH=%USERPROFILE%\.ollama\models\gguf\sakura-14b-qwen2.5-v1.0-q4_k_m.gguf
+```
+
+```powershell
+# PowerShell
+$env:SAKURA_GGUF_PATH = "$env:USERPROFILE\.ollama\models\gguf\sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
+```
+
+### 环境变量体系
+
+所有翻译器通过 `keys.py` 统一管理默认值：
+
+```
+translators/keys.py   ← 声明所有翻译器环境变量的键名和默认值
+translators/*.py      ← 通过 os.getenv() 读取
+batch.py              ← _detect_translator_mode() 运行时探测
+```
+
+完整环境变量列表见 [README 环境变量参考](../README.md#环境变量参考)。
+
+## 6. 开发工作流
+
+### 运行脚本
+
+| 脚本 | 入口 | 适用场景 |
+|------|------|---------|
+| `批量日中翻译` | `python -m manga_translator.batch` | 交互式选择 a/b |
+| `批量日中翻译-sakura-qwen3` | `python -m manga_translator.batch` + `TRANSLATOR_MODE=degraded` | GGUF→Ollama 降级 |
+| `批量日中翻译-sakura-galtrans` | `python -m manga_translator.batch` + `TRANSLATOR_MODE=galtransl` | Galtransl 直连 |
+| `批量日中翻译-sakura-galtrans-全量翻译` | 同上 + `RETRANS=true` | 全部重翻 |
+| `批量日中翻译-sakura-galtrans-续传翻译` | 同上 + `RETRANS=false` | 仅翻译新增 |
+| `批量韩中翻译` | `python -m manga_translator.batch_ko` | Qwen3 Ollama |
+
+### 启动脚本做了什么
+
+每个启动脚本（`.command` / `.sh` / `.bat`）的等价逻辑：
+
+1. `cd` 到项目根目录
+2. 激活 Python 环境（conda → venv → 系统 Python）
+3. 按需设置环境变量（`SAKURA_GGUF_PATH`、`GALTRANS_GGUF_PATH`、`TRANSLATOR_MODE`、`RETRANS`）
+4. 运行 `python -m manga_translator.batch`
+
+依赖 conda 的用户可通过 `CONDA_ENV` 变量覆盖环境名：
+
+```bash
+export CONDA_ENV=my-custom-env
+bash start-scripts/linux/批量日中翻译.sh
+```
+
+### 效果预期
+
+| 指标 | Sakura Qwen2.5 | Galtransl 14B |
+|------|---------------|----------------|
+| 翻译速度 (Apple MPS) | ~22 tok/s | ~21 tok/s |
+| 端到端速度 | ~8.7 秒/页 | ~8.8 秒/页 |
+| 一般向质量 | 术语精准 | 偏口语化 |
+| R18 质量 | 越狱后可用 | 原生流畅 |
+| 续传加速 | 2-3s (只翻新图) | 3s (只翻新图) |
+
+关键模块耗时占比（157 页全量 benchmark）：
+
+```
+翻译阶段:   41.2% (GGUF) vs 45.5% (Ollama)
+检测阶段:   ~15%
+OCR 阶段:   ~20%
+擦除+渲染:   ~24%
+```
+
+翻译是最大瓶颈，GGUF 直连省去的 HTTP 往返使其占比降低 4.3 个百分点。
+
+## 7. 核心架构详解
+
+### 批量编排流程 (batch.py)
+
+```
+batch_translate()
+  ├── _get_image_files()         # 扫描子目录，每目录为一批
+  │     └── _sort_key_from_filename()  # 5类排序规则
+  ├── _detect_translator_mode()  # 探测可用的翻译器（GGUF→Ollama→报错）
+  ├── _load_models()             # 加载模型（单例）
+  ├── for dir in dirs:           # 逐目录处理
+  │     ├── _load_progress()     # 读取 .translate_progress.json
+  │     ├── for image in images:
+  │     │     ├── _should_skip() # retrans=false 且已记录 → 跳过
+  │     │     ├── translate()    # 核心翻译引擎
+  │     │     └── _save_progress()  # 条件写入（非空结果守卫）
+  │     └── 输出 result/
+  └── _unload_models()           # 可选（默认进程退出时释放）
+```
+
+模块文件：
+- `manga_translator/batch_common.py` — 扫描、排序、进度读写（`batch.py` 和 `batch_ko.py` 共享）
+- `manga_translator/batch.py` — 日中批量入口，模型加载，翻译器降级
+- `manga_translator/batch_ko.py` — 韩中批量入口
+
+### 核心翻译流水线 (层 B)
+
+```
+translate(ctx)
+  ├── Detection: YOLO 检测文本块 bounding boxes
+  ├── OCR: manga-ocr 识别日文/韩文文字
+  ├── Translation: 调用已加载的翻译器单例
+  ├── Inpainting: lama-mpe 擦除原文
+  └── Rendering: 排版译文到气泡内
+```
+
+翻译器在 `Detection` 开始前已完成加载和热身（`load_model()`），
+各阶段间通过 `Context` 对象传递中间状态。参见 ADR：`docs/adr/`。
+
+### 翻译器接口
+
+新增翻译器只需实现：
+
+```python
+class MyTranslator(TranslatorBase):
+    async def translate(self, context: Context) -> Context:
+        # 接收 Context(含 OCR 文本), 返回 Context(含译文)
+        ...
+
+    @classmethod
+    def load_model(cls, **kwargs) -> Any:
+        # 单例加载（类级 _model 变量）
+        ...
+```
+
+然后在 `translator_dispatch()` 中注册键值。无需修改核心引擎。
+
+## 8. 测试体系
+
+### 单元测试
+
+```bash
+python -m pytest test/unit/ -v
+# test_unit_batch.py     — 5 测试：文件名排序、图片扫描、进度加载/保存
+# test_unit_batch_ko.py  — 3 测试：韩中排序、扫描、进度
+# test_unit_translation.py — 8 测试：日语提取、galtransl 格式、翻译器回退
+# 继承自原项目: test_core.py, test_utils.py
+```
+
+### E2E 测试
+
+需先设置 `SAKURA_GGUF_PATH` 或 `GALTRANS_GGUF_PATH`，需要测试素材（不在仓库中，需自备）：
+
+```bash
+# 方式B — 首次/续传/重翻三场景
+python test/e2e_gguf_2img.py
+
+# 方式C — 同上
+TRANSLATOR_MODE=galtransl python test/e2e_galtransl_2img.py
+
+# 单次翻译验证
+python test/e2e_gguf.py           # 方式B
+python test/e2e_galtransl.py      # 方式C
+python test/e2e_ollama.py         # 方式A
+```
+
+### 质量回归 (LLM-as-Judge)
+
+```bash
+python test/run_dual_benchmark.py
+```
+
+自动运行方式B和方式C翻译同一批图片，使用 Qwen3 14B（通过 Ollama）作为 LLM Judge 对三条维度评分（流畅度/准确度/完整度），结果写入 `test/results/benchmark/`。
+
+## 9. 跨平台设计
+
+### 平台守卫代码位置
+
+| 文件 | 守卫类型 | 说明 |
+|------|---------|------|
+| `server/main.py` | `hasattr(signal, 'SIGTERM')` | Windows 无 SIGTERM |
+| `utils/inference.py` | `sys.platform != 'win32'` | `os.chmod` 仅 Unix |
+| `mode/ws.py` | `asyncio.WindowsSelectorEventLoopPolicy()` | Windows 事件循环 |
+| `mode/local.py` | `try/except ImportError` | `psutil` 可选 |
+
+### 启动脚本层次
+
+```
+start-scripts/
+├── macos/    → .command (Finder 双击)
+├── linux/    → .sh (bash)
+└── windows/  → .bat (conda → venv → 系统 Python 三级 fallback)
+```
+
+所有脚本在打包时由统一模板生成，仅环境变量值和平台语法不同。
+
+## 10. 文档索引
+
+| 文档 | 目标读者 | 内容 |
+|------|---------|------|
+| [README.md](../README.md) | 用户 | 快速上手、安装、使用 |
+| 本文档 | 开发者 | 架构、开发环境、测试、扩展 |
+| [日中翻译-迭代报告](./日中翻译-迭代报告.md) | 开发者 | 14 个迭代的完整开发历史 |
+| [韩中翻译-迭代报告](./韩中翻译-迭代报告.md) | 开发者 | 韩中流水线开发历史 |
+| [日中翻译-性能实测报告](./日中翻译-性能实测报告.md) | 开发者/用户 | 157页全量 benchmark 数据 |
+| [CONTEXT.md](../CONTEXT.md) | AI Agent | 项目上下文，代码地图 |
+| [docs/adr/](./adr/) | 架构师 | 架构决策记录 |
