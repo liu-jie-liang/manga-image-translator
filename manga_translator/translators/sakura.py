@@ -229,7 +229,7 @@ class SakuraTranslator(CommonTranslator):
             self.client.base_url = SAKURA_API_BASE + "/v1"
         else:
             self.client.base_url = SAKURA_API_BASE
-        self.client.api_key = "sk-114514"
+        self.client.api_key = os.environ.get('SAKURA_API_KEY', 'sk-114514')
         self.temperature = 0.3
         self.top_p = 0.3
         self.frequency_penalty = 0.1

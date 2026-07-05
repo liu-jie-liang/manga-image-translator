@@ -61,3 +61,6 @@ cert.pem
 key.pem
 github90daystoken.md
 githubsshkey.md
+
+# Personal manga input/output directories (copyright-sensitive)
+/带着攻略*/
