@@ -40,13 +40,15 @@ pip install -r requirements.txt
 
 ### 启动
 
-双击 `.command` 脚本，选择翻译模式：
+双击对应平台的启动脚本：
 
-```
-请选择翻译模式:
-  a) 降级方式 (B→A fallback, 优先Sakura GGUF)
-  b) 方式C (Galtransl GGUF, R18友好)
-```
+| 平台 | 启动目录 | 双击即可运行 |
+|------|---------|-------------|
+| macOS | `scripts/macos/` | `.command` 文件 |
+| Linux | `scripts/linux/` | `.sh` 文件 |
+| Windows | `scripts/windows/` | `.bat` 文件 |
+
+首次使用推荐 `批量日中翻译.command`（交互式选择翻译模式）。
 
 或命令行：
 
@@ -159,7 +161,7 @@ TRANSLATOR_MODE=galtransl GALTRANS_GGUF_PATH=... python test/e2e_galtransl_2img.
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `CONDA_ENV` | conda 环境名（`.command` 脚本使用） | `TraeAI-2` |
+| `CONDA_ENV` | conda 环境名（启动脚本使用） | `TraeAI-2` |
 
 > 示例：`SAKURA_GGUF_PATH="$HOME/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"`
 

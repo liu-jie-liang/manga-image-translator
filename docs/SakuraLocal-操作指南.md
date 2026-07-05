@@ -2,7 +2,7 @@
 
 ## 翻译器选择
 
-启动时双击 `.command` 脚本，会提示选择翻译模式：
+启动时双击 `scripts/macos/` 目录下对应的 `.command` 脚本（macOS），或 `scripts/linux/*.sh`（Linux），或 `scripts/windows/*.bat`（Windows），会提示选择翻译模式：
 
 ```
 请选择翻译模式:
@@ -48,7 +48,7 @@ export SAKURA_API_BASE='http://192.168.1.15:11434/v1'
 export SAKURA_MODEL='sakura-14b-qwen2.5-v1.0'
 ```
 
-> `.command` 脚本已预设上述配置，双击即可启动。
+> `.command`/`.sh`/`.bat` 脚本已预设上述配置，双击即可启动。
 
 ## 方式B 使用
 

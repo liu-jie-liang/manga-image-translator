@@ -59,7 +59,7 @@
 - **模型生命周期 (Model Lifecycle)**: `batch.py` 负责模型的加载和卸载，`manga_translator.py` 不再自动加载模型。模型加载一次后，逐目录翻译，全部完成后卸载。
 - **批量日中翻译-sakura-qwen3.command**: macOS Finder 双击启动脚本（降级方式），固定使用 `TRANSLATOR_MODE=degraded`，先探测 Sakura Qwen3 GGUF（方式B），不可用时降级到 Ollama HTTP（方式A）。仅含 `SAKURA_GGUF_PATH`、`SAKURA_API_BASE`、`SAKURA_MODEL` 三个环境变量。
 - **批量日中翻译-sakura-galtrans.command**: macOS Finder 双击启动脚本（方式C），固定使用 `TRANSLATOR_MODE=galtransl`，直接使用 Galtransl GGUF 模型，不可用时报错不降级。仅含 `GALTRANS_GGUF_PATH` 一个环境变量。
-- **批量日中翻译-sakura-galtrans-全量翻译.command**: macOS Finder 双击启动脚本（方式C 全量重译），基于 `批量日中翻译-sakura-galtrans.command` 增加 `RETRANS=true` 和 `BENCHMARK=false`，固定全量重新翻译、不启用基准测试，仅需用户输入目录并确认开始。
+- **批量日中翻译-sakura-galtrans-全量翻译.command**: macOS Finder 双击启动脚本（方式C 全量重译），基于 `scripts/macos/批量日中翻译-sakura-galtrans.command` 增加 `RETRANS=true` 和 `BENCHMARK=false`，固定全量重新翻译、不启用基准测试，仅需用户输入目录并确认开始。
 
 ## 翻译流水线阶段耗时（实测）
 
@@ -232,7 +232,7 @@ manga_translator/
 **调用链路**（Iteration 5 后）：
 
 ```
-批量日中翻译.command  (macOS Finder 双击启动)
+scripts/macos/批量日中翻译.command  (macOS Finder 双击启动)
     │
     ▼
 manga_translator/batch.py  (A+)
@@ -279,8 +279,8 @@ export USE_GPU_LIMITED='true'  # Detection/OCR/Inpainting → MPS, 翻译 → CP
 
 | 脚本 | 翻译器 | 特点 |
 |------|--------|------|
-| `批量日中翻译-sakura-qwen3.command` | Sakura-14B-Qwen2.5 (方式B→A 降级) | GGUF 直连优先，Ollama 兜底 |
-| `批量日中翻译-sakura-galtrans.command` | Sakura-GalTransl-14B-v3.8 (方式C) | R18 友好，不可用时报错 |
+| `scripts/macos/批量日中翻译-sakura-qwen3.command` | Sakura-14B-Qwen2.5 (方式B→A 降级) | GGUF 直连优先，Ollama 兜底 |
+| `scripts/macos/批量日中翻译-sakura-galtrans.command` | Sakura-GalTransl-14B-v3.8 (方式C) | R18 友好，不可用时报错 |
 
 操作步骤：
 1. 在 Finder 中找到对应 `.command` 文件
@@ -492,7 +492,7 @@ python -m manga_translator test/materials/chapter-13 \
 3. 修改 `manga_translator.py`，移除 `translate()` 和 `translate_batch()` 中的自动模型加载
 4. 修改 `manga_translator.py`，移除 `_translate()` 中的后台清理任务启动
 5. 实现 `batch.py`：模型加载→目录排序→逐层翻译→模型卸载→输出总结
-6. 创建 `批量日中翻译.command`：macOS Finder 双击启动
+6. 创建 `scripts/macos/批量日中翻译.command`：macOS Finder 双击启动
 
 #### 架构变更详解
 
@@ -504,7 +504,7 @@ python -m manga_translator test/materials/chapter-13 \
 | 模型清理 | `_translate()` 每次翻译后启动后台清理 | 不启动，由 `batch.py` 全部完成后卸载 | `manga_translator.py` |
 | 目录排序 | 无（`os.walk` 系统默认顺序） | 5 类规则排序 | `batch.py` |
 | 进度跟踪 | 无（中断需全部重来） | `.translate_progress.json` 逐页记录 | `local.py` |
-| 入口方式 | CLI 命令行参数 | Finder 双击 `.command` + 命令行 | `批量日中翻译.command` + `batch.py` |
+| 入口方式 | CLI 命令行参数 | Finder 双击 `.command` + 命令行 | `scripts/macos/批量日中翻译.command` + `batch.py` |
 
 #### 临界设计决策
 
@@ -535,7 +535,7 @@ python -m manga_translator test/materials/chapter-13 \
 | `test/unit/test_local_norecurse.py` | 新增 | 10 个非递归扫描测试 |
 | `test/unit/test_batch_progress.py` | 新增 | 12 个进度跟踪测试 |
 | `test/benchmark_batch.py` | 新增 | 批量翻译性能实测脚本 |
-| `批量日中翻译.command` | 新增 | macOS Finder 双击启动 |
+| `scripts/macos/批量日中翻译.command` | 新增 | macOS Finder 双击启动 |
 | `CONTEXT.md` | 修改 | 术语 + 操作指南 + 测试报告 + 迭代报告 + 性能报告 |
 
 ## 性能实测报告 — Iteration 5 新执行链路
