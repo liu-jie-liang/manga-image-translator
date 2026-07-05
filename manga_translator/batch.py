@@ -503,6 +503,9 @@ def main():
     if retrans_env in ('true', '1', 'yes'):
         retrans = True
         print('> 环境变量 RETRANS=true → 全量重新翻译')
+    elif retrans_env in ('false', '0', 'no'):
+        retrans = False
+        print('> 环境变量 RETRANS=false → 续传模式')
     else:
         retrans_input = input('是否重新翻译整个目录？(清空所有进度记录) [y/N]: ').strip().lower()
         retrans = retrans_input in ('y', 'yes')

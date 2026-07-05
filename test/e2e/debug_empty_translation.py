@@ -144,12 +144,14 @@ def _instrumented_parse_response(response: str) -> List[str]:
 
 
 # Store original for restore
+_original_translate = None
+_original_translate_sakura = None
 _original_parse_response = None
 
 
 def patch_translator():
     """Apply diagnostic monkey-patches to translator classes."""
-    global _original_translate, _original_parse_response
+    global _original_translate, _original_translate_sakura, _original_parse_response
 
     from manga_translator.translators.galtransl_local import GaltranslLocalTranslator
     from manga_translator.translators.sakura_local import SakuraLocalTranslator
@@ -174,14 +176,15 @@ def patch_translator():
 
 def restore_translator():
     """Restore original translator methods."""
-    global _original_translate, _original_parse_response
+    global _original_translate, _original_translate_sakura, _original_parse_response
 
     from manga_translator.translators.galtransl_local import GaltranslLocalTranslator
     from manga_translator.translators.sakura_local import SakuraLocalTranslator
 
     if _original_translate:
         GaltranslLocalTranslator._translate = _original_translate
-        SakuraLocalTranslator._translate = _original_translate
+    if _original_translate_sakura:
+        SakuraLocalTranslator._translate = _original_translate_sakura
     if _original_parse_response:
         GaltranslLocalTranslator._parse_response = _original_parse_response
     logger.info('[DIAG] Restored original translator methods')

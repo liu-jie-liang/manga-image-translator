@@ -1,448 +1,41 @@
 {
   "mode": "modeC",
   "translator_mode": "galtransl",
-  "session_elapsed": 105.20557403564453,
-  "total_pages": 12,
+  "session_elapsed": 31.14425802230835,
+  "total_pages": 1,
   "pages": [
     {
       "page_index": 0,
-      "image_name": "001.jpg",
+      "image_name": "056.webp",
       "detection": {
-        "elapsed": 0.7663979530334473,
-        "start_ts": 1781876266.989186,
-        "end_ts": 1781876267.755585
+        "elapsed": 0.8204629421234131,
+        "start_ts": 1782398095.128107,
+        "end_ts": 1782398095.948571
       },
       "ocr": {
-        "elapsed": 1.3571829795837402,
-        "start_ts": 1781876267.755628,
-        "end_ts": 1781876269.112812
+        "elapsed": 1.9633901119232178,
+        "start_ts": 1782398095.9486048,
+        "end_ts": 1782398097.911996
       },
       "translation": {
-        "elapsed": 3.6487438678741455,
-        "start_ts": 1781876269.855839,
-        "end_ts": 1781876273.5045838
+        "elapsed": 26.75701093673706,
+        "start_ts": 1782398098.865637,
+        "end_ts": 1782398125.6226492
       },
       "inpainting": {
-        "elapsed": 1.6386041641235352,
-        "start_ts": 1781876273.991988,
-        "end_ts": 1781876275.630594
+        "elapsed": 0.0,
+        "start_ts": 0.0,
+        "end_ts": 0.0
       },
       "rendering": {
-        "elapsed": 0.2614319324493408,
-        "start_ts": 1781876275.641546,
-        "end_ts": 1781876275.9029791
+        "elapsed": 0.0,
+        "start_ts": 0.0,
+        "end_ts": 0.0
       },
-      "total_elapsed": 7.672360897064209,
-      "ocr_text_count": 8,
-      "translated_text_count": 5,
-      "prompt_tokens": 200,
-      "completion_tokens": 65,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 1,
-      "image_name": "002.jpg",
-      "detection": {
-        "elapsed": 0.27866530418395996,
-        "start_ts": 1781876276.0052109,
-        "end_ts": 1781876276.2838771
-      },
-      "ocr": {
-        "elapsed": 1.3528850078582764,
-        "start_ts": 1781876276.283919,
-        "end_ts": 1781876277.636805
-      },
-      "translation": {
-        "elapsed": 2.362499952316284,
-        "start_ts": 1781876278.228689,
-        "end_ts": 1781876280.59119
-      },
-      "inpainting": {
-        "elapsed": 1.6078200340270996,
-        "start_ts": 1781876280.771852,
-        "end_ts": 1781876282.3796742
-      },
-      "rendering": {
-        "elapsed": 0.05239605903625488,
-        "start_ts": 1781876282.387878,
-        "end_ts": 1781876282.440274
-      },
-      "total_elapsed": 5.654266357421875,
-      "ocr_text_count": 6,
-      "translated_text_count": 3,
-      "prompt_tokens": 184,
-      "completion_tokens": 50,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 2,
-      "image_name": "003.jpg",
-      "detection": {
-        "elapsed": 0.27333617210388184,
-        "start_ts": 1781876282.521462,
-        "end_ts": 1781876282.794799
-      },
-      "ocr": {
-        "elapsed": 0.7425227165222168,
-        "start_ts": 1781876282.7948291,
-        "end_ts": 1781876283.537353
-      },
-      "translation": {
-        "elapsed": 2.2463862895965576,
-        "start_ts": 1781876283.7494788,
-        "end_ts": 1781876285.995866
-      },
-      "inpainting": {
-        "elapsed": 1.6300818920135498,
-        "start_ts": 1781876286.075695,
-        "end_ts": 1781876287.7057788
-      },
-      "rendering": {
-        "elapsed": 0.03473782539367676,
-        "start_ts": 1781876287.714543,
-        "end_ts": 1781876287.7492821
-      },
-      "total_elapsed": 4.927064895629883,
-      "ocr_text_count": 9,
-      "translated_text_count": 6,
-      "prompt_tokens": 172,
-      "completion_tokens": 47,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 3,
-      "image_name": "004.jpg",
-      "detection": {
-        "elapsed": 0.2772397994995117,
-        "start_ts": 1781876287.8341792,
-        "end_ts": 1781876288.11142
-      },
-      "ocr": {
-        "elapsed": 1.5277812480926514,
-        "start_ts": 1781876288.111455,
-        "end_ts": 1781876289.6392372
-      },
-      "translation": {
-        "elapsed": 5.958371162414551,
-        "start_ts": 1781876290.228628,
-        "end_ts": 1781876296.187
-      },
-      "inpainting": {
-        "elapsed": 1.6913669109344482,
-        "start_ts": 1781876296.510252,
-        "end_ts": 1781876298.2016199
-      },
-      "rendering": {
-        "elapsed": 0.1153569221496582,
-        "start_ts": 1781876298.211967,
-        "end_ts": 1781876298.3273249
-      },
-      "total_elapsed": 9.57011604309082,
-      "ocr_text_count": 29,
-      "translated_text_count": 11,
-      "prompt_tokens": 257,
-      "completion_tokens": 122,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 4,
-      "image_name": "005.jpg",
-      "detection": {
-        "elapsed": 0.28334593772888184,
-        "start_ts": 1781876298.418153,
-        "end_ts": 1781876298.7015
-      },
-      "ocr": {
-        "elapsed": 1.5464859008789062,
-        "start_ts": 1781876298.7015371,
-        "end_ts": 1781876300.248024
-      },
-      "translation": {
-        "elapsed": 4.145961284637451,
-        "start_ts": 1781876300.759708,
-        "end_ts": 1781876304.90567
-      },
-      "inpainting": {
-        "elapsed": 1.7121648788452148,
-        "start_ts": 1781876305.1010711,
-        "end_ts": 1781876306.813238
-      },
-      "rendering": {
-        "elapsed": 0.09548592567443848,
-        "start_ts": 1781876306.823914,
-        "end_ts": 1781876306.9194
-      },
-      "total_elapsed": 7.783443927764893,
-      "ocr_text_count": 19,
-      "translated_text_count": 7,
+      "total_elapsed": 29.54086399078369,
+      "ocr_text_count": 20,
+      "translated_text_count": 0,
       "prompt_tokens": 215,
-      "completion_tokens": 87,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 5,
-      "image_name": "010.jpg",
-      "detection": {
-        "elapsed": 0.28566503524780273,
-        "start_ts": 1781876307.00543,
-        "end_ts": 1781876307.291096
-      },
-      "ocr": {
-        "elapsed": 0.7547059059143066,
-        "start_ts": 1781876307.2911339,
-        "end_ts": 1781876308.045841
-      },
-      "translation": {
-        "elapsed": 2.439155101776123,
-        "start_ts": 1781876308.460348,
-        "end_ts": 1781876310.8995042
-      },
-      "inpainting": {
-        "elapsed": 1.7031669616699219,
-        "start_ts": 1781876311.006581,
-        "end_ts": 1781876312.70975
-      },
-      "rendering": {
-        "elapsed": 0.05225682258605957,
-        "start_ts": 1781876312.721146,
-        "end_ts": 1781876312.773403
-      },
-      "total_elapsed": 5.234949827194214,
-      "ocr_text_count": 9,
-      "translated_text_count": 4,
-      "prompt_tokens": 176,
-      "completion_tokens": 51,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 6,
-      "image_name": "011.jpg",
-      "detection": {
-        "elapsed": 0.28484606742858887,
-        "start_ts": 1781876312.8693068,
-        "end_ts": 1781876313.154154
-      },
-      "ocr": {
-        "elapsed": 0.8294780254364014,
-        "start_ts": 1781876313.154186,
-        "end_ts": 1781876313.983665
-      },
-      "translation": {
-        "elapsed": 2.6505119800567627,
-        "start_ts": 1781876314.536258,
-        "end_ts": 1781876317.186771
-      },
-      "inpainting": {
-        "elapsed": 1.6989109516143799,
-        "start_ts": 1781876317.305757,
-        "end_ts": 1781876319.00467
-      },
-      "rendering": {
-        "elapsed": 0.052073001861572266,
-        "start_ts": 1781876319.013509,
-        "end_ts": 1781876319.065582
-      },
-      "total_elapsed": 5.515820026397705,
-      "ocr_text_count": 13,
-      "translated_text_count": 6,
-      "prompt_tokens": 183,
-      "completion_tokens": 56,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 7,
-      "image_name": "013.jpg",
-      "detection": {
-        "elapsed": 0.2843468189239502,
-        "start_ts": 1781876319.168538,
-        "end_ts": 1781876319.452886
-      },
-      "ocr": {
-        "elapsed": 0.5438840389251709,
-        "start_ts": 1781876319.452925,
-        "end_ts": 1781876319.99681
-      },
-      "translation": {
-        "elapsed": 1.193392276763916,
-        "start_ts": 1781876320.8564339,
-        "end_ts": 1781876322.0498261
-      },
-      "inpainting": {
-        "elapsed": 1.6873021125793457,
-        "start_ts": 1781876322.165372,
-        "end_ts": 1781876323.852675
-      },
-      "rendering": {
-        "elapsed": 0.04381084442138672,
-        "start_ts": 1781876323.8625011,
-        "end_ts": 1781876323.906312
-      },
-      "total_elapsed": 3.7527360916137695,
-      "ocr_text_count": 5,
-      "translated_text_count": 2,
-      "prompt_tokens": 150,
-      "completion_tokens": 25,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 8,
-      "image_name": "014.jpg",
-      "detection": {
-        "elapsed": 0.2880260944366455,
-        "start_ts": 1781876323.9893389,
-        "end_ts": 1781876324.277366
-      },
-      "ocr": {
-        "elapsed": 1.4364659786224365,
-        "start_ts": 1781876324.277406,
-        "end_ts": 1781876325.713872
-      },
-      "translation": {
-        "elapsed": 4.332395076751709,
-        "start_ts": 1781876326.24662,
-        "end_ts": 1781876330.579016
-      },
-      "inpainting": {
-        "elapsed": 1.6833531856536865,
-        "start_ts": 1781876330.775094,
-        "end_ts": 1781876332.458449
-      },
-      "rendering": {
-        "elapsed": 0.07701897621154785,
-        "start_ts": 1781876332.468568,
-        "end_ts": 1781876332.545587
-      },
-      "total_elapsed": 7.817259311676025,
-      "ocr_text_count": 23,
-      "translated_text_count": 9,
-      "prompt_tokens": 224,
-      "completion_tokens": 88,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 9,
-      "image_name": "015.jpg",
-      "detection": {
-        "elapsed": 0.28413891792297363,
-        "start_ts": 1781876332.624671,
-        "end_ts": 1781876332.908811
-      },
-      "ocr": {
-        "elapsed": 1.2973458766937256,
-        "start_ts": 1781876332.908849,
-        "end_ts": 1781876334.2061949
-      },
-      "translation": {
-        "elapsed": 3.549623727798462,
-        "start_ts": 1781876334.6811352,
-        "end_ts": 1781876338.2307599
-      },
-      "inpainting": {
-        "elapsed": 1.6876239776611328,
-        "start_ts": 1781876338.354777,
-        "end_ts": 1781876340.042403
-      },
-      "rendering": {
-        "elapsed": 0.06854820251464844,
-        "start_ts": 1781876340.0528798,
-        "end_ts": 1781876340.121428
-      },
-      "total_elapsed": 6.887280702590942,
-      "ocr_text_count": 17,
-      "translated_text_count": 6,
-      "prompt_tokens": 198,
-      "completion_tokens": 74,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 10,
-      "image_name": "016.jpg",
-      "detection": {
-        "elapsed": 0.2794461250305176,
-        "start_ts": 1781876340.215064,
-        "end_ts": 1781876340.4945111
-      },
-      "ocr": {
-        "elapsed": 0.763751745223999,
-        "start_ts": 1781876340.4945412,
-        "end_ts": 1781876341.258293
-      },
-      "translation": {
-        "elapsed": 2.7501680850982666,
-        "start_ts": 1781876341.9929879,
-        "end_ts": 1781876344.743157
-      },
-      "inpainting": {
-        "elapsed": 1.6774237155914307,
-        "start_ts": 1781876344.8386781,
-        "end_ts": 1781876346.516104
-      },
-      "rendering": {
-        "elapsed": 0.046949148178100586,
-        "start_ts": 1781876346.524704,
-        "end_ts": 1781876346.5716531
-      },
-      "total_elapsed": 5.5177388191223145,
-      "ocr_text_count": 11,
-      "translated_text_count": 7,
-      "prompt_tokens": 181,
-      "completion_tokens": 59,
-      "translation_ttfb": 0.0,
-      "error": null,
-      "retry_count": 0
-    },
-    {
-      "page_index": 11,
-      "image_name": "017.jpg",
-      "detection": {
-        "elapsed": 0.2825310230255127,
-        "start_ts": 1781876346.681781,
-        "end_ts": 1781876346.964312
-      },
-      "ocr": {
-        "elapsed": 0.41059088706970215,
-        "start_ts": 1781876346.964349,
-        "end_ts": 1781876347.37494
-      },
-      "translation": {
-        "elapsed": 22.24146270751953,
-        "start_ts": 1781876348.02234,
-        "end_ts": 1781876370.2638028
-      },
-      "inpainting": {
-        "elapsed": 1.7078568935394287,
-        "start_ts": 1781876370.3238242,
-        "end_ts": 1781876372.031683
-      },
-      "rendering": {
-        "elapsed": 0.01493382453918457,
-        "start_ts": 1781876372.0425842,
-        "end_ts": 1781876372.057518
-      },
-      "total_elapsed": 24.65737533569336,
-      "ocr_text_count": 4,
-      "translated_text_count": 1,
-      "prompt_tokens": 147,
       "completion_tokens": 512,
       "translation_ttfb": 0.0,
       "error": null,
@@ -451,151 +44,122 @@
   ],
   "statistics": {
     "speed": {
-      "session_elapsed": 105.206,
-      "total_pages": 12,
-      "successful_pages": 12,
+      "session_elapsed": 31.144,
+      "total_pages": 1,
+      "successful_pages": 1,
       "failed_pages": 0,
-      "pages_per_minute": 6.84,
-      "avg_page_time": 8.767,
+      "pages_per_minute": 1.93,
+      "avg_page_time": 31.144,
       "stages": {
         "detection": {
-          "count": 12,
-          "sum": 3.868,
-          "avg": 0.322,
-          "min": 0.273,
-          "max": 0.766,
-          "std": 0.14,
-          "cv": 0.434,
-          "p50": 0.284,
-          "p90": 0.288,
-          "p95": 0.503,
-          "p99": 0.714
+          "count": 1,
+          "sum": 0.82,
+          "avg": 0.82,
+          "min": 0.82,
+          "max": 0.82,
+          "std": 0.0,
+          "cv": 0.0,
+          "p50": 0.82,
+          "p90": 0.82,
+          "p95": 0.82,
+          "p99": 0.82
         },
         "ocr": {
-          "count": 12,
-          "sum": 12.563,
-          "avg": 1.047,
-          "min": 0.411,
-          "max": 1.546,
-          "std": 0.41,
-          "cv": 0.392,
-          "p50": 1.063,
-          "p90": 1.519,
-          "p95": 1.536,
-          "p99": 1.544
+          "count": 1,
+          "sum": 1.963,
+          "avg": 1.963,
+          "min": 1.963,
+          "max": 1.963,
+          "std": 0.0,
+          "cv": 0.0,
+          "p50": 1.963,
+          "p90": 1.963,
+          "p95": 1.963,
+          "p99": 1.963
         },
         "translation": {
-          "count": 12,
-          "sum": 57.519,
-          "avg": 4.793,
-          "min": 1.193,
-          "max": 22.241,
-          "std": 5.632,
-          "cv": 1.175,
-          "p50": 3.15,
-          "p90": 5.796,
-          "p95": 13.286,
-          "p99": 20.45
+          "count": 1,
+          "sum": 26.757,
+          "avg": 26.757,
+          "min": 26.757,
+          "max": 26.757,
+          "std": 0.0,
+          "cv": 0.0,
+          "p50": 26.757,
+          "p90": 26.757,
+          "p95": 26.757,
+          "p99": 26.757
         },
         "inpainting": {
-          "count": 12,
-          "sum": 20.126,
-          "avg": 1.677,
-          "min": 1.608,
-          "max": 1.712,
-          "std": 0.033,
-          "cv": 0.02,
-          "p50": 1.687,
-          "p90": 1.707,
-          "p95": 1.71,
-          "p99": 1.712
+          "count": 1,
+          "sum": 0.0,
+          "avg": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "std": 0.0,
+          "cv": 0.0,
+          "p50": 0.0,
+          "p90": 0.0,
+          "p95": 0.0,
+          "p99": 0.0
         },
         "rendering": {
-          "count": 12,
-          "sum": 0.915,
-          "avg": 0.076,
-          "min": 0.015,
-          "max": 0.261,
-          "std": 0.064,
-          "cv": 0.842,
-          "p50": 0.052,
-          "p90": 0.113,
-          "p95": 0.181,
-          "p99": 0.245
+          "count": 1,
+          "sum": 0.0,
+          "avg": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "std": 0.0,
+          "cv": 0.0,
+          "p50": 0.0,
+          "p90": 0.0,
+          "p95": 0.0,
+          "p99": 0.0
         }
       },
       "total": {
-        "count": 12,
-        "sum": 94.99,
-        "avg": 7.916,
-        "min": 3.753,
-        "max": 24.657,
-        "std": 5.512,
-        "cv": 0.696,
-        "p50": 6.271,
-        "p90": 9.395,
-        "p95": 16.359,
-        "p99": 22.998
+        "count": 1,
+        "sum": 29.541,
+        "avg": 29.541,
+        "min": 29.541,
+        "max": 29.541,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 29.541,
+        "p90": 29.541,
+        "p95": 29.541,
+        "p99": 29.541
       },
       "token": {
-        "total_prompt_tokens": 2287,
-        "total_completion_tokens": 1236,
-        "total_tokens": 3523,
-        "tokens_per_second": 21.49
+        "total_prompt_tokens": 215,
+        "total_completion_tokens": 512,
+        "total_tokens": 727,
+        "tokens_per_second": 19.14
       }
     },
     "quality": {
       "translation_coverage": {
-        "count": 12,
-        "sum": 5.476,
-        "avg": 0.456,
-        "min": 0.25,
-        "max": 0.667,
-        "std": 0.128,
-        "cv": 0.281,
-        "p50": 0.422,
-        "p90": 0.635,
-        "p95": 0.65,
-        "p99": 0.663
+        "count": 1,
+        "sum": 0.0,
+        "avg": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "std": 0.0,
+        "cv": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "p95": 0.0,
+        "p99": 0.0
       },
-      "avg_ocr_text_count": 12.8,
-      "avg_translated_text_count": 5.6
+      "avg_ocr_text_count": 20.0,
+      "avg_translated_text_count": 0.0
     },
     "stability": {
       "error_rate": 0.0,
       "failed_count": 0,
       "retried_pages": 0,
       "total_retries": 0,
-      "outliers": {
-        "detection": [
-          {
-            "index": 0,
-            "value": 0.766,
-            "page": "001.jpg"
-          }
-        ],
-        "translation": [
-          {
-            "index": 11,
-            "value": 22.241,
-            "page": "017.jpg"
-          }
-        ],
-        "rendering": [
-          {
-            "index": 0,
-            "value": 0.261,
-            "page": "001.jpg"
-          }
-        ],
-        "total": [
-          {
-            "index": 11,
-            "value": 24.657,
-            "page": "017.jpg"
-          }
-        ]
-      }
+      "outliers": {}
     }
   }
 }

@@ -79,8 +79,10 @@ def _should_record_progress(ctx) -> bool:
         return False
     if not ctx.result:
         return False
-    # text_regions 存在但为空列表（区别于没检测到文本时 text_regions 属性不存在）
-    if hasattr(ctx, 'text_regions') and ctx.text_regions is not None and len(ctx.text_regions) == 0:
+    # text_regions 存在但为空列表或 None（翻译失败/过滤后全部为空）
+    # 区别于没检测到文本时 text_regions 属性不存在
+    # 注意：Context 是 dict 子类，hasattr 总是 True，需要用 'in' 检查 key 是否存在
+    if 'text_regions' in ctx and (ctx.text_regions is None or len(ctx.text_regions) == 0):
         if _has_text_content(ctx):
             return False
     return True
@@ -502,10 +504,10 @@ class MangaTranslatorLocal(MangaTranslator):
                         save_ctx.save_quality = self.save_quality
                         
                         save_result(ctx.result, output_dest, save_ctx)
-                        translated_count += 1
                         # 每翻译成功一张就记录进度（跳过全空翻译）
                         if _should_record_progress(ctx):
                             _save_progress(path, src_filename)
+                            translated_count += 1
                         
                         # 保存文本文件（如果需要）
                         if self.save_text or self.save_text_file or self.prep_manual:
