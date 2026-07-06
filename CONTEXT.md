@@ -521,7 +521,6 @@ python -m manga_translator.batch --benchmark
 
 # 3. 对比两份报告
 # 报告位于 test/results/benchmark/modeA/ 和 test/results/benchmark/modeB/
-# 综合对比报告位于 test/results/benchmark/COMPARISON.md
 ```
 
 ### 最新基准测试结果 (2026-06-17/18, 158页漫画，第二次实测)
@@ -545,7 +544,7 @@ python -m manga_translator.batch --benchmark
 
 **结论**：两次实测结果一致，方式B 翻译吞吐量稳定领先 27%+，覆盖率完全一致。方式B 在速度、延迟、稳定性上全面优于方式A。
 
-详细对比见 [test/results/benchmark/COMPARISON.md](test/results/benchmark/COMPARISON.md)
+详细对比见 [日中翻译-性能实测报告](docs/日中翻译-性能实测报告.md)
 
 ### 数据收集对性能的影响
 
