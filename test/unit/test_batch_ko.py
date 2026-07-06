@@ -127,10 +127,29 @@ class TestBatchKoProbe:
 
     @pytest.mark.asyncio
     async def test_probe_ollama_returns_bool(self):
-        """_probe_ollama 返回布尔值。"""
+        """_probe_ollama 在正常 Ollama 服务下返回布尔值。"""
         from manga_translator.batch_ko import _probe_ollama
-        result = await _probe_ollama()
-        assert isinstance(result, bool)
+        with patch('aiohttp.ClientSession') as mock_session_cls:
+            mock_session = MagicMock()
+            mock_resp = AsyncMock()
+            mock_resp.status = 200
+            mock_get = AsyncMock()
+            mock_get.__aenter__ = AsyncMock(return_value=mock_resp)
+            mock_get.__aexit__ = AsyncMock(return_value=None)
+            mock_session.get = MagicMock(return_value=mock_get)
+            mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=None)
+            result = await _probe_ollama()
+            assert result is True
+
+        # Test unreachable case
+        with patch('aiohttp.ClientSession') as mock_session_cls:
+            mock_session = MagicMock()
+            mock_session.get = AsyncMock(side_effect=Exception('Connection refused'))
+            mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=None)
+            result = await _probe_ollama()
+            assert result is False
 
 
 class TestBatchKoMain:

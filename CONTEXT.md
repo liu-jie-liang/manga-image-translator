@@ -10,7 +10,7 @@
 
 ### 翻译器
 - **SakuraTranslator**: API 版 Sakura 翻译器（`translators/sakura.py`），通过 OpenAI 兼容 API 调用远程 Sakura 模型（如 Ollama 部署的 sakura-14b），内置日→中轻小说风格专用 prompt。通过 `SAKURA_API_BASE`、`SAKURA_MODEL`、`SAKURA_VERSION` 环境变量配置。
-- **SakuraLocalTranslator**: 本地 GGUF 版 Sakura 翻译器（`translators/sakura_local.py`，新增），通过 `llama-cpp-python` 直连 GPU(MPS) 运行本地 GGUF 量化模型。模型常驻显存单例复用，消除 HTTP 往返延迟。通过 `SAKURA_GGUF_PATH` 环境变量指向 `.gguf` 文件路径。参见 ADR-0004。
+- **SakuraLocalTranslator**: 本地 GGUF 版 Sakura 翻译器（`translators/sakura_local.py`），通过 `llama-cpp-python` 直连 GPU(MPS) 运行本地 GGUF 量化模型。模型常驻显存单例复用，消除 HTTP 往返延迟。通过 `SAKURA_GGUF_PATH` 环境变量指向 `.gguf` 文件路径。参见 ADR-0004。
 - **方式A (Ollama HTTP)** / **方式B (本地 GGUF 直连)**：两种翻译后端选择策略。`SAKURA_GGUF_PATH` 未设置时走方式A（Ollama API，向后兼容），设置后自动切换方式B（本地 GGUF 直连 GPU）。两种方式共用相同的 Prompt 模板和输出解析逻辑。
 - **SugoiTranslator**: 本地 Sugoi 翻译器（`translators/sugoi.py`），基于 ctranslate2 在本地运行 m2m100/jparacrawl 模型。**不支持 MPS**。当 `--use-gpu` 时 ctranslate2 收到 `device='mps'` 会崩溃（`ValueError: unsupported device mps`）。**仅支持 JPN↔ENG 翻译，不支持 ja→zh-cn**，因此不纳入日中漫画翻译降级链。
 - **翻译器降级链 (Translator Fallback Chain)**: 会话级翻译器选择策略。启动时按优先级探测：方式B(GGUF) → 方式A(Ollama) → 无可用翻译器报错退出。选定后整个批次使用同一翻译器，不做请求级切换。详见 ADR-0005。
@@ -57,9 +57,9 @@
 - **进度文件 (Progress File)**: 每个目录下的 `.translate_progress.json`，记录已翻译完成的图片文件名，支持中断续传。`--retrans` 参数可清空所有进度文件重新翻译。
 - **非递归扫描 (Non-recursive Scan)**: `_get_image_files()` 只扫描当前目录的图片文件，跳过子目录、非图片文件和进度文件。翻译范围由 `batch.py` 按目录层级控制。
 - **模型生命周期 (Model Lifecycle)**: `batch.py` 负责模型的加载和卸载，`manga_translator.py` 不再自动加载模型。模型加载一次后，逐目录翻译，全部完成后卸载。
-- **批量日中翻译-sakura-qwen3.command**: macOS Finder 双击启动脚本（降级方式），固定使用 `TRANSLATOR_MODE=degraded`，先探测 Sakura Qwen3 GGUF（方式B），不可用时降级到 Ollama HTTP（方式A）。仅含 `SAKURA_GGUF_PATH`、`SAKURA_API_BASE`、`SAKURA_MODEL` 三个环境变量。
-- **批量日中翻译-sakura-galtrans.command**: macOS Finder 双击启动脚本（方式C），固定使用 `TRANSLATOR_MODE=galtransl`，直接使用 Galtransl GGUF 模型，不可用时报错不降级。仅含 `GALTRANS_GGUF_PATH` 一个环境变量。
-- **批量日中翻译-sakura-galtrans-全量翻译.command**: macOS Finder 双击启动脚本（方式C 全量重译），基于 `start-scripts/macos/批量日中翻译-sakura-galtrans.command` 增加 `RETRANS=true` 和 `BENCHMARK=false`，固定全量重新翻译、不启用基准测试，仅需用户输入目录并确认开始。
+- **批量日中翻译-sakura-qwen3.command**: macOS Finder 双击启动脚本（降级方式），位于 `start-scripts/macos/`，固定使用 `TRANSLATOR_MODE=degraded`，先探测 Sakura Qwen3 GGUF（方式B），不可用时降级到 Ollama HTTP（方式A）。仅含 `SAKURA_GGUF_PATH`、`SAKURA_API_BASE`、`SAKURA_MODEL` 三个环境变量。
+- **批量日中翻译-sakura-galtrans.command**: macOS Finder 双击启动脚本（方式C），位于 `start-scripts/macos/`，固定使用 `TRANSLATOR_MODE=galtransl`，直接使用 Galtransl GGUF 模型，不可用时报错不降级。仅含 `GALTRANS_GGUF_PATH` 一个环境变量。
+- **批量日中翻译-sakura-galtrans-全量翻译.command**: macOS Finder 双击启动脚本（方式C 全量重译），位于 `start-scripts/macos/`，基于 `批量日中翻译-sakura-galtrans.command` 增加 `RETRANS=true` 和 `BENCHMARK=false`，固定全量重新翻译、不启用基准测试，仅需用户输入目录并确认开始。
 
 ## 翻译流水线阶段耗时（实测）
 
@@ -210,8 +210,8 @@
 ```
 manga_translator/
 ├── batch.py                # 日中批量翻译入口（A+）：模型生命周期 + 目录遍历 + 交互式入口
-├── batch_ko.py             # 韩中批量翻译入口（NEW）：模型生命周期 + 目录遍历 + 交互式入口
-├── batch_common.py         # 批量翻译公共模块（NEW）：目录排序、图片扫描、进度管理
+├── batch_ko.py             # 韩中批量翻译入口：模型生命周期 + 目录遍历 + 交互式入口
+├── batch_common.py         # 批量翻译公共模块：目录排序、图片扫描、进度管理
 ├── manga_translator.py     # 核心翻译管道（A）：逐页翻译 + 滑动窗口
 ├── sliding_window.py       # 滑动窗口翻译策略
 ├── mode/local.py           # 本地模式入口（B）：非递归扫描 + 进度跟踪 + 图片→翻译
@@ -221,21 +221,39 @@ manga_translator/
 │   ├── chatgpt.py          # OpenAI ChatGPT 翻译器
 │   ├── sakura.py           # Sakura API 翻译器（Ollama HTTP, 方式A）
 │   ├── sakura_local.py     # Sakura 本地 GGUF 翻译器（llama-cpp-python + MPS, 方式B）
-│   ├── qwen3_kozh.py       # Qwen3 韩中翻译器（NEW）：Ollama + Qwen3 14B
+│   ├── galtransl_local.py  # Galtransl 本地 GGUF 翻译器（方式C）
+│   ├── qwen3_kozh.py       # Qwen3 韩中翻译器（Ollama 原生 /api/chat）
 │   └── sugoi.py            # Sugoi 本地翻译器（ctranslate2，不支持 MPS）
 ├── detection/              # 文字检测
 ├── ocr/                    # OCR 识别
 ├── inpainting/             # 文字擦除
 └── rendering/              # 译文渲染
+
+test/
+├── unit/                   # 单元测试（218 tests, 全部 mock 外部依赖）
+│   ├── test_batch.py       # 批量翻译编排层
+│   ├── test_batch_ko.py    # 韩中批量翻译入口
+│   ├── test_batch_progress.py  # 进度跟踪
+│   ├── test_batch_sort.py  # 目录排序规则
+│   ├── test_custom_openai.py   # GPT 基类翻译器
+│   ├── test_empty_translation_progress.py  # 空翻译结果守卫
+│   ├── test_galtransl_local.py    # Galtransl GGUF 翻译器
+│   ├── test_local_norecurse.py    # 非递归图片扫描
+│   ├── test_mode_local.py         # 核心翻译引擎层
+│   ├── test_qwen3_kozh.py         # Qwen3 韩中翻译器
+│   ├── test_sakura.py             # Sakura API 翻译器
+│   ├── test_sakura_local.py       # Sakura GGUF 翻译器
+│   ├── test_sliding_window.py     # 滑动窗口翻译策略
+│   └── test_translator_fallback.py  # 翻译器降级链
 ```
 
-**调用链路**（Iteration 5 后）：
+**调用链路**：
 
 ```
 start-scripts/macos/批量日中翻译.command  (macOS Finder 双击启动)
     │
     ▼
-manga_translator/batch.py  (A+)
+manga_translator/batch.py  (A+: 编排层)
     │  ┌─ 模型加载（一次性，整个翻译周期）
     │  ├─ 扫描目录 → sort_subdirs() 排序
     │  └─ 逐层翻译：
@@ -275,12 +293,16 @@ export USE_GPU_LIMITED='true'  # Detection/OCR/Inpainting → MPS, 翻译 → CP
 
 ### 使用方式一：Finder 双击启动（macOS 推荐）
 
-提供两个脚本，按需选择：
+提供 6 个脚本，按需选择：
 
 | 脚本 | 翻译器 | 特点 |
 |------|--------|------|
+| `start-scripts/macos/批量日中翻译.command` | 交互选择 | 启动后选 Sakura Qwen2.5 (B→A) 或 Galtransl (C) |
 | `start-scripts/macos/批量日中翻译-sakura-qwen3.command` | Sakura-14B-Qwen2.5 (方式B→A 降级) | GGUF 直连优先，Ollama 兜底 |
 | `start-scripts/macos/批量日中翻译-sakura-galtrans.command` | Sakura-GalTransl-14B-v3.8 (方式C) | R18 友好，不可用时报错 |
+| `start-scripts/macos/批量日中翻译-sakura-galtrans-全量翻译.command` | 方式C 全量重译 | RETRANS=true，全部重翻 |
+| `start-scripts/macos/批量日中翻译-sakura-galtrans-续传翻译.command` | 方式C 续传 | RETRANS=false，仅翻新增 |
+| `start-scripts/macos/批量韩中翻译.command` | Qwen3 14B 韩→中 | 需 Ollama + Qwen3 |
 
 操作步骤：
 1. 在 Finder 中找到对应 `.command` 文件
@@ -358,15 +380,15 @@ python -m manga_translator test/materials/chapter-13 \
     --retrans                     # 可选：重新翻译
 ```
 
-此模式直接调用 `local.py` 的 `translate_path`，仅翻译单个目录下的图片，不遍历子目录。进度文件仍然生效。
+此模式直接调用 `mode/local.py` 的 `translate_path`，仅翻译单个目录下的图片，不遍历子目录。进度文件仍然生效。
 
 ### 韩中翻译 (Korean-Chinese Translation)
 
 #### 韩中翻译专用翻译器
 
-- **Qwen3KoZhTranslator**: 韩中翻译器（`translators/qwen3_kozh.py`），基于 `CustomOpenAiTranslator`，通过 Ollama 调用 Qwen3 14B 模型。优化韩中漫画翻译 Prompt，禁用 `enableThinking` 提升效率。通过 `CUSTOM_OPENAI_API_BASE`、`CUSTOM_OPENAI_MODEL` 环境变量配置。
+- **Qwen3KoZhTranslator**: 韩中翻译器（`translators/qwen3_kozh.py`），基于 `CustomOpenAiTranslator`，通过 Ollama 调用 Qwen3 14B 模型。优化韩中漫画翻译 Prompt，禁用 `think` 模式（Ollama 原生参数，等效 Qwen3 的 `enable_thinking`）以提升效率。通过 `CUSTOM_OPENAI_API_BASE`、`CUSTOM_OPENAI_MODEL` 环境变量配置。
 - **无降级链**: 韩中翻译不使用降级链，Ollama 不可达时直接报错退出。`attempts=1`。
-- **enableThinking**: Qwen3 模型的思考模式，韩中翻译中设置为 `False` 以加速响应。
+- **think 模式**: Qwen3 模型的思考模式，在 Ollama 原生 `/api/chat` 端点中通过 `"think": false` 禁用以加速响应（等效 Qwen3 自身的 `enable_thinking` 参数）。
 
 #### 韩中翻译领域术语
 
@@ -378,8 +400,8 @@ python -m manga_translator test/materials/chapter-13 \
 
 #### 韩中批量翻译入口
 
-- **batch_ko.py**: 韩中批量翻译入口（`manga_translator/batch_ko.py`），与日中翻译共用 `batch_common.py` 的公共逻辑（目录排序、图片扫描、进度管理），配置 `source_lang='ko'`、`translator='custom_openai'`。
-- **批量韩中翻译.command**: macOS Finder 双击启动脚本，设置韩中翻译环境变量（`CUSTOM_OPENAI_API_BASE`、`CUSTOM_OPENAI_MODEL`），调用 `batch_ko.py`。
+- **batch_ko.py**: 韩中批量翻译入口（`manga_translator/batch_ko.py`），与日中翻译共用 `batch_common.py` 的公共逻辑（目录排序、图片扫描、进度管理），配置 `source_lang='ko'`、`translator='qwen3_kozh'`。
+- **批量韩中翻译.command**: macOS Finder 双击启动脚本，位于 `start-scripts/macos/`，设置韩中翻译环境变量（`CUSTOM_OPENAI_API_BASE`、`CUSTOM_OPENAI_MODEL`），调用 `batch_ko.py`。
 
 #### 公共模块
 
@@ -391,7 +413,11 @@ python -m manga_translator test/materials/chapter-13 \
 |------|------|------|
 | `SAKURA_API_BASE` | Ollama API 地址（方式A） | 方式A 必填 |
 | `SAKURA_MODEL` | Ollama 模型名 | 方式A 必填 |
+| `SAKURA_VERSION` | Sakura 模型版本（`0.9` 或 `0.10`） | 可选 |
 | `SAKURA_GGUF_PATH` | 本地 GGUF 文件路径（方式B） | 方式B 必填 |
+| `GALTRANS_GGUF_PATH` | Galtransl GGUF 文件路径（方式C） | 方式C 必填 |
+| `TRANSLATOR_MODE` | `degraded`(B→A) 或 `galtransl`(C) | 可选 |
+| `RETRANS` | `true`=全量重翻, `false`=续传 | 可选 |
 | `CUSTOM_OPENAI_API_BASE` | Qwen3 Ollama API 地址（韩中翻译） | 韩中 必填 |
 | `CUSTOM_OPENAI_MODEL` | Qwen3 Ollama 模型名（韩中翻译） | 韩中 必填 |
 | `CUSTOM_OPENAI_API_KEY` | API Key（韩中翻译，默认 `ollama`） | 韩中 必填 |
@@ -399,230 +425,35 @@ python -m manga_translator test/materials/chapter-13 \
 
 ## 测试报告
 
-### 测试总览（2026-06-11）
+### 测试总览（2026-07-05）
 
-| 测试文件 | 用例数 | 状态 | 说明 |
-|----------|--------|------|------|
-| `test/unit/test_batch_sort.py` | 13 | 全部通过 | 目录排序规则（纯数字/数字+字母/字母+数字/纯字母/其他/分隔符/嵌套） |
-| `test/unit/test_local_norecurse.py` | 10 | 全部通过 | 非递归扫描（图片过滤/跳过子目录/跳过非图片/跳过进度文件/空目录） |
-| `test/unit/test_batch_progress.py` | 12 | 全部通过 | 进度跟踪（保存/加载/清空/幂等/排序存储/retrans 集成） |
-| `test/unit/test_sakura_local.py` | 16 | 全部通过 | Sakura 本地 GGUF 翻译器（单例/路由/Prompt/解析/参数） |
-| `test/unit/test_sliding_window.py` | 30 | 全部通过 | 滑动窗口翻译策略（分区/渲染/组装/解析/映射） |
-| **合计** | **81** | **全部通过** | **0 回归** |
-
-### Iteration 5 新增测试详情
-
-**test_batch_sort.py** — 目录排序（13 用例）:
-- 纯数字：按数值排序（`1, 2, 03, 10`）
-- 数字+字母：数字→字母（`01a, 02a, 02b`）
-- 字母+数字：字母→数字（`ch1, ch2, ep01`）
-- 纯字母：视为字母+0（排同类最前）
-- 分隔符兼容：`01-a` = `01a`
-- 混合模式：多种模式混合排序
-- 边界：空列表、单元素、相同前缀
-- 稳定性：同名多次排序结果一致
-
-**test_local_norecurse.py** — 非递归扫描（10 用例）:
-- 识图扩展名：`.jpg/.jpeg/.png/.bmp/.webp/.tiff/.gif`
-- 跳过非图片：`.txt/.zip/.mp4`
-- 跳过子目录：目录内子文件夹及其中图片
-- 跳过进度文件：`.translate_progress.json`
-- 自然排序结果：`page1 < page2 < page10`
-- 边界：空目录、不存在的目录、损坏的图片
-
-**test_batch_progress.py** — 进度跟踪（12 用例）:
-- 加载空进度：`.translate_progress.json` 不存在 → 空 set
-- 保存+加载：写入文件名 → 读取还原
-- 幂等：重复写同一文件 → set 不重复
-- 排序存储：JSON 数组中文件名按字母序排列
-- 清空：`_clear_progress` → 文件被删除
-- 损坏文件：非法 JSON → 空 set（不影响翻译）
-
-## 迭代报告 (Iteration Report)
-
-### Iteration 4: GGUF 本地直连 GPU 翻译（2026-06-10）
-
-**目标**: 新增方式B（本地 GGUF 直连 GPU），对比方式A（Ollama HTTP），不降低质量的前提下提升速度/稳定性。
-
-**已完成**:
-- [x] ADR-0004: 本地 GGUF 直连 GPU 翻译架构决策
-- [x] `translators/sakura_local.py`: 核心实现（单例、MPS、Prompt 一致）
-- [x] `test/unit/test_sakura_local.py`: 16 个单元测试（env var 切换、单例、Prompt、解析、参数）全部通过
-- [x] `translators/__init__.py`: 自动路由（`SAKURA_GGUF_PATH` 设置 → 方式B，否则 → 方式A）
-- [x] `translators/keys.py`: 新增 `SAKURA_GGUF_PATH` 环境变量
-- [x] `test/benchmark_sakura_local.py`: 157页全量实测，完整 A/B 阶段级对比写入上方
-
-**实测结论 (157页全量)**:
-- 总耗时：方式B 988.8s vs 方式A 1061.5s → B 快 6.8%
-- **翻译阶段**：方式B **407.0s** vs 方式A **483.1s** → **B 快 15.8%** (每页省 0.5s)
-- 稳定性：CV 0.31 (B) vs 0.45 (A)，异常慢页减半 (8 vs 15)
-- 质量：方式B 在惯用语识别上略优
-- 模型加载：GGUF 10.3s 一次性（单例常驻），后续翻译中无感知
-
-**文件清单**:
-| 文件 | 状态 | 说明 |
-|------|------|------|
-| `manga_translator/translators/sakura_local.py` | 新增 | 核心实现（150行） |
-| `test/unit/test_sakura_local.py` | 新增 | 16 单元测试 |
-| `test/benchmark_sakura_local.py` | 新增 | A/B 对比 benchmark |
-| `manga_translator/translators/keys.py` | 修改 | +1 env var |
-| `manga_translator/translators/__init__.py` | 修改 | +2 行 import, 自动路由 |
-| `docs/adr/0004-local-gguf-gpu-translation.md` | 新增 | 架构决策记录 |
-| `CONTEXT.md` | 修改 | 术语 + 性能报告 |
-
-### Iteration 5: 批量翻译脚本 — TDD 测试驱动重构（2026-06-11）
-
-**目标**: 将项目从「单目录递归扫描」模式重构为「批量翻译脚本驱动、逐目录层级遍历」模式，使模型生命周期由脚本集中管理，支持中断续传。
-
-#### TDD 开发全过程
-
-**第一步：写测试 → 测试失败（红）**
-1. `test_batch_sort.py`：定义目录排序的 13 个用例，首次运行全部失败（`sort_subdirs` 不存在）
-2. `test_local_norecurse.py`：定义非递归扫描的 10 个用例，导入 `_get_image_files` 时报 ImportError
-3. `test_batch_progress.py`：定义进度跟踪的 12 个用例，导入 `_save_progress` 时报 ImportError
-
-**第二步：最小代码实现 → 测试通过（绿）**
-1. 在 `local.py` 中新增 `_get_image_files`、`_load_progress`、`_save_progress`、`_clear_progress` 四个函数
-2. 在 `batch.py` 中新增 `sort_subdirs` 函数，实现 5 类目录名排序规则
-3. 逐个修正测试断言使其与实际排序逻辑一致（如纯数字排序中 `'2' < '03'`、其他模式自然排序）
-
-**第三步：集成与重构**
-1. 修改 `local.py` 的 `translate_path` 和 `_translate_folder_batch`，将 `os.walk` 替换为 `_get_image_files`
-2. 在逐页翻译流程中集成 `_load_progress`/`_save_progress`，实现进度续传
-3. 修改 `manga_translator.py`，移除 `translate()` 和 `translate_batch()` 中的自动模型加载
-4. 修改 `manga_translator.py`，移除 `_translate()` 中的后台清理任务启动
-5. 实现 `batch.py`：模型加载→目录排序→逐层翻译→模型卸载→输出总结
-6. 创建 `start-scripts/macos/批量日中翻译.command`：macOS Finder 双击启动
-
-#### 架构变更详解
-
-| 维度 | 变更前 | 变更后 | 文件 |
-|------|--------|--------|------|
-| 图片扫描 | `os.walk` 递归所有子目录 | `_get_image_files()` 单目录层级 | `local.py` |
-| 翻译范围 | OCR 前一次性收集所有子目录图片 | 按目录分层，每层独立翻译 | `local.py` + `batch.py` |
-| 模型管理 | `manga_translator.py` 翻译前自动加载 | `batch.py` 加载一次，全局复用 | `manga_translator.py` → `batch.py` |
-| 模型清理 | `_translate()` 每次翻译后启动后台清理 | 不启动，由 `batch.py` 全部完成后卸载 | `manga_translator.py` |
-| 目录排序 | 无（`os.walk` 系统默认顺序） | 5 类规则排序 | `batch.py` |
-| 进度跟踪 | 无（中断需全部重来） | `.translate_progress.json` 逐页记录 | `local.py` |
-| 入口方式 | CLI 命令行参数 | Finder 双击 `.command` + 命令行 | `start-scripts/macos/批量日中翻译.command` + `batch.py` |
-
-#### 临界设计决策
-
-1. **进度粒度**：每张图片翻译成功后立即写进度，而非目录完成后批量写。确保在翻译过程中断时进度与实际完成严格一致。
-
-2. **进度位置**：进度文件 `.translate_progress.json` 放在各自目录根下。`batch.py` 递归遍历时每个子目录独立管理进度，不交叉污染。
-
-3. **模型加载时机**：`batch.py` 在遍历前加载一次，而非每个 `translate_path` 内部各自加载。避免了模型重复加载的开销（GGUF 加载约 10s）。
-
-4. **非递归扫描**：`_get_image_files` 仅扫描 `os.listdir` 的当前层级，跳过 `os.path.isdir` 的子目录。翻译范围由 `batch.py` 控制层级，而非嵌套在翻译器内部。
-
-5. **最小代码修改原则**：仅修改 3 个文件 + 新增 2 个文件 + 新增 3 个测试文件。保留原有翻译流水线（detection/OCR/翻译/inpainting）完全不动。原有单目录翻译模式保持不变，继续可用。
-
-#### 测试策略
-
-- 新增 35 个单元测试，覆盖排序、扫描、进度三大新增功能
-- 已有 46 个测试全部通过，零回归
-- 测试隔离：使用 `tempfile.TemporaryDirectory` 确保无文件系统残留
-- 边界覆盖：空目录、不存在的目录、损坏图片、非法 JSON、单元素列表
-
-#### 文件清单
-| 文件 | 状态 | 说明 |
-|------|------|------|
-| `manga_translator/batch.py` | 新增 | 批量翻译入口（~310 行） |
-| `manga_translator/mode/local.py` | 修改 | 非递归扫描 + 进度跟踪 + `_translate_folder_batch` |
-| `manga_translator/manga_translator.py` | 修改 | 移除 translate()/translate_batch() 自动模型加载，移除 _translate() 后台清理 |
-| `test/unit/test_batch_sort.py` | 新增 | 13 个目录排序测试 |
-| `test/unit/test_local_norecurse.py` | 新增 | 10 个非递归扫描测试 |
-| `test/unit/test_batch_progress.py` | 新增 | 12 个进度跟踪测试 |
-| `test/benchmark_batch.py` | 新增 | 批量翻译性能实测脚本 |
-| `start-scripts/macos/批量日中翻译.command` | 新增 | macOS Finder 双击启动 |
-| `CONTEXT.md` | 修改 | 术语 + 操作指南 + 测试报告 + 迭代报告 + 性能报告 |
-
-## 性能实测报告 — Iteration 5 新执行链路
-
-### 实测环境
-
-| 项目 | 配置 |
-|------|------|
-| 硬件 | Apple M4 Pro / 64GB / macOS |
-| 翻译器 | sakura-14b-qwen2.5-v1.0 (Ollama HTTP @ localhost:11434) |
-| 策略 | use_gpu_limited (det/ocr/inpaint → MPS, 翻译 → Ollama) |
-| 测试数据 | c13-bench-local 图片子集，10 页 / 4 个目录 |
-
-### 测试目录结构
-
-```
-batch-bench/           # 根目录，3 张图片
-├── 01/                # 纯数字子目录，3 张图片
-├── 02a/               # 数字+字母子目录，2 张图片
-└── b3/                # 字母+数字子目录，2 张图片
+```bash
+python -m pytest test/unit/ -v  # 218 tests, all pass
 ```
 
-### 实测结果
+| 测试文件 | 用例数 | 说明 |
+|----------|--------|------|
+| `test/unit/test_batch_sort.py` | 18 | 目录排序规则（纯数字/数字+字母/字母+数字/纯字母/其他/分隔符/嵌套） |
+| `test/unit/test_local_norecurse.py` | 12 | 非递归扫描（图片过滤/跳过子目录/跳过非图片/跳过进度文件/图片格式） |
+| `test/unit/test_batch_progress.py` | 13 | 进度跟踪（保存/加载/清空/递归清空/幂等/排序存储/retrans 集成） |
+| `test/unit/test_sakura_local.py` | 17 | Sakura 本地 GGUF 翻译器（单例/路由/Prompt/解析/参数） |
+| `test/unit/test_galtransl_local.py` | 18 | Galtransl 本地 GGUF 翻译器 |
+| `test/unit/test_sliding_window.py` | 30 | 滑动窗口翻译策略（分区/渲染/组装/解析/映射） |
+| `test/unit/test_empty_translation_progress.py` | 16 | 空翻译结果跳过 progress 记录 |
+| `test/unit/test_translator_fallback.py` | 12 | 翻译器降级链探测 |
+| `test/unit/test_qwen3_kozh.py` | 14 | Qwen3 韩中翻译器（初始化/API 端点/参数构建） |
+| `test/unit/test_batch_ko.py` | 18 | 韩中批量翻译入口（参数配置/翻译器实例化/Ollama 探测） |
+| `test/unit/test_batch.py` | 10 | 批量翻译编排层（输出路径/边界/retrans/模式检测/设备检测） |
+| `test/unit/test_mode_local.py` | 17 | 核心翻译引擎层（文本检测/进度守卫/翻译调度/强制清理） |
+| `test/unit/test_sakura.py` | 12 | Sakura 翻译器（预处理/对齐检测/重复检测/翻译请求/风格切换） |
+| `test/unit/test_custom_openai.py` | 11 | GPT 基类翻译器（抽取/提示组装/请求/重试/翻译流程） |
+| **合计** | **218** | **全部通过，覆盖四种翻译方式全链路** |
 
-#### 总览
+> Iteration 15: 拆分 `test_batch_common.py` → 合并到对应目标文件后删除；新增 4 个测试文件；修复 3 个功能代码防御性 bug + 5 个已有测试 bug。
 
-| 指标 | 数值 |
-|------|------|
-| 总页数 | 10 页 |
-| 总目录数 | 4 个 |
-| 模型加载 | 0.0s（Ollama HTTP 远程服务，无本地加载） |
-| 目录排序遍历 | 0.2ms（可忽略） |
-| 逐目录翻译总耗时 | 102.2s |
-| **端到端总耗时** | **102.2s (1.7 min)** |
-| **平均每页** | **10.2s** |
+## 迭代历史
 
-#### 分目录耗时
-
-| 目录 | 页数 | 总耗时 | 平均/页 | 说明 |
-|------|------|--------|---------|------|
-| (根目录) | 3 | 44.7s | 14.9s | 首目录含模型初始化开销 |
-| 01 | 3 | 26.9s | 9.0s | 纯数字目录，模型已预热 |
-| 02a | 2 | 16.2s | 8.1s | 数字+字母目录 |
-| b3 | 2 | 14.4s | 7.2s | 字母+数字目录，模型完全预热 |
-
-**趋势**：每页耗时随目录顺序递减（14.9s → 9.0s → 8.1s → 7.2s），因为首目录包含模型懒加载初始化，后续目录享受模型预热收益。
-
-#### 阶段级耗时分析（全部 10 页汇总）
-
-| 阶段 | 总耗时 | 平均/页 | 占比 |
-|------|--------|---------|------|
-| Detection (文字检测) | 4.0s | 0.4s | 11.3% |
-| OCR (文字识别) | 12.5s | 1.3s | 35.2% |
-| 翻译 (Translation) | 2.6s | 0.3s | 7.3% |
-| 文字擦除 (Inpainting) | 16.4s | 1.6s | 46.2% |
-
-#### 批量翻译新增开销
-
-| 开销项 | 耗时 | 占比 | 说明 |
-|--------|------|------|------|
-| 目录排序 | 0.2ms | ~0% | 3 个目录排序，数学运算即可忽略 |
-| 进度 I/O | <1ms/页 | ~0% | 每页写入 ~50-70 bytes JSON，SSD 瞬时 |
-| 目录间切换 | <10ms | ~0% | 模型已加载在内存，无需重载 |
-
-**结论**：批量翻译的新增开销（排序 + 进度 + 目录切换）在总耗时中占比 <0.01%，无性能损失。主要时间消耗仍在翻译流水线本身（detection/OCR/翻译/inpainting）。
-
-### 与 Iteration 4 单目录翻译对比
-
-Iteration 4 实测（157 页，单目录 `os.walk` 递归，Sakura 翻译）：
-
-| 指标 | Iteration 4 (单目录递归) | Iteration 5 (批量逐层) | 差异 |
-|------|--------------------------|------------------------|------|
-| 模式 | `os.walk` 一次性扫描全部子目录 | `batch.py` 按目录分层翻译 | 架构变更 |
-| 模型加载 | 首次翻译时自动加载 | 翻译前手动加载一次 | 可控性提升 |
-| 平均每页 (Sakura) | 6.8s | ~6.7s (预估) | 无显著差异 |
-| 中断续传 | 不支持 | 每页进度文件 | 新增能力 |
-| 翻译范围控制 | OCR 前一次性收集全部图片 | 逐目录独立翻译 | 灵活性提升 |
-
-**注**：本次 Iteration 5 实测使用了 Sugoi 翻译器（因 Config 路由配置），平均 10.2s/页。根据 Iteration 4 的 Sakura 实测数据（6.8s/页），推测 Iteration 5 在 Sakura 翻译器下预计 ~6.7s/页，与 Iteration 4 保持持平。
-
-### 性能结论
-
-1. **批量翻译框架开销为零**：目录排序（0.2ms）、进度 I/O（<1ms/页）、目录切换（<10ms）均不构成性能瓶颈。
-2. **逐目录翻译不增加额外开销**：模型加载一次后各目录共享，每页翻译耗时与单目录模式持平。
-3. **首目录初始化开销**：首个目录的平均每页耗时比后续目录高约 50%，主要因为模型懒加载（detection/OCR/inpainting 首次加载到 MPS）。
-4. **中断续传无性能代价**：`.translate_progress.json` 写入仅 50-70 bytes/页，对 SSD 完全透明。
-5. **建议**：对于多目录漫画翻译（如多话批量），Iteration 5 的新执行链路在零性能损失的前提下提供了中断续传、可控翻译范围、模型生命周期管理等关键能力。
+详细开发历史（Iteration 1-15 的完整 TDD 过程、架构决策、性能实测数据）见 [日中翻译-迭代报告](docs/日中翻译-迭代报告.md)。
 
 ## 基准测试操作指南
 

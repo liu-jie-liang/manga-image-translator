@@ -62,7 +62,7 @@ def safe_get_memory_info():
 
 def _has_text_content(ctx) -> bool:
     """检查原始OCR是否检测到了有内容的文本。"""
-    return (
+    return bool(
         hasattr(ctx, 'textlines')
         and ctx.textlines
         and any(t.text.strip() for t in ctx.textlines if hasattr(t, 'text'))

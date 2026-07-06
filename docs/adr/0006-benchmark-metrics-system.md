@@ -106,6 +106,6 @@
 - `manga_translator/manga_translator.py`：逐阶段计时注入
 - `manga_translator/translators/sakura.py`：Ollama 翻译器 token 跟踪
 - `manga_translator/translators/sakura_local.py`：GGUF 翻译器 token 跟踪
-- `test/test_benchmark.py`：基准测试模块 TDD（22 用例）
-- `test/test_quality_judge.py`：Judge 模块 TDD（17 用例）
+- `test/test_benchmark.py`：基准测试模块 TDD（28 用例）
+- `test/test_quality_judge.py`：Judge 模块 TDD（18 用例）
 - `test/test_report_generator.py`：报告生成器 TDD（11 用例）

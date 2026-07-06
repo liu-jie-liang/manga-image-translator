@@ -1,5 +1,17 @@
 # 更新日志 (中文)
 
+### 2026-07-05
+
+1. 单元测试全面重构：拆分 `test_batch_common.py`（与 4 个文件重复），新建 `test_batch.py`、`test_mode_local.py`、`test_sakura.py`、`test_custom_openai.py` 四个测试文件，覆盖全四种翻译方式
+2. 修复 `_has_text_content` 返回类型不一致问题（`bool()` 包装），确保始终返回 True/False
+3. 修复 `custom_openai.py` 中 `re.sub(None)` 崩溃问题（`extract_capture_groups` 返回 None 时加空字符串防护）
+4. 修复 `manga_translator.py` 中 `kernel_size` 无默认值问题（`int(params.get('kernel_size', 3))`）
+5. 修复 `test_galtransl_local.py` 中 3 个 `asyncio.get_event_loop()` 异步事件循环问题（改为 `@pytest.mark.asyncio` + `await`）
+6. 修复 `test_custom_openai.py` 中 `RateLimitError` 构造参数格式和 `test_empty_queries` 未 mock API 调用问题
+7. 修复 `test_batch_progress.py` 中 `TestClearAllProgress` 类注入到 `TestGetUncompletedFiles` 中间的结构 bug
+8. 修复 `test_mode_local.py` 中 `MangaTranslatorLocal` 缺少 `kernel_size` 参数问题（6 处）
+9. 218 个单元测试全部通过，覆盖方式A (Sakura Ollama)、方式B (Sakura GGUF)、方式C (Galtransl GGUF)、韩中 (Qwen3 Ollama)
+
 ### 2026-06-19
 
 1. 新增方式C翻译器：集成 Sakura-GalTransl-14B-v3.8 本地 GGUF 模型，专为视觉小说/Galgame 翻译优化

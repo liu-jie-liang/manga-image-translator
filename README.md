@@ -234,8 +234,22 @@ export RETRANS=true
 | `BENCHMARK` | 输出 benchmark JSON | `false` |
 | `CONDA_ENV` | conda 环境名 | `manga-translator` |
 | `OLLAMA_HOST` | Ollama 主机地址 | `http://localhost:11434` |
+| `CUSTOM_OPENAI_API_BASE` | Qwen3 Ollama API 地址（韩中） | `http://localhost:11434/v1` |
+| `CUSTOM_OPENAI_MODEL` | Qwen3 Ollama 模型名（韩中） | `qwen3:14b-q4_k_m` |
+| `CUSTOM_OPENAI_API_KEY` | API Key（韩中，默认 ollama） | `ollama` |
 
 </details>
+
+## 测试
+
+```bash
+# 单元测试（全部 mock 外部依赖，数量详见 CONTEXT.md）
+python -m pytest test/unit/ -v
+
+# E2E 测试（需要 GGUF 模型 + 测试素材）
+python test/e2e_gguf_2img.py      # 方式B 场景化测试
+python test/e2e_galtransl_2img.py # 方式C 场景化测试
+```
 
 ## 文档
 

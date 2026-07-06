@@ -2,7 +2,7 @@
 
 ## 状态
 
-已提案 (Proposed)
+已实现 (Implemented)
 
 ## 设备分配现状
 
@@ -65,7 +65,7 @@ MPS (Metal Performance Shaders) 在 PyTorch 上存在已知稳定性问题：
 
 ### 当前项目的 MPS 清理代码
 
-[local.py#L55-L71](../../manga_translator/mode/local.py#L55-L71) 已有 `force_cleanup()`，但只处理 CUDA：
+[mode/local.py#L55-L71](../../manga_translator/mode/local.py#L55-L71) 已有 `force_cleanup()`，但只处理 CUDA：
 
 ```python
 def force_cleanup():
@@ -96,4 +96,4 @@ def force_cleanup():
 ## 参考资料
 
 - 设备检测代码：[manga_translator.py#L288-L300](../../manga_translator/manga_translator.py#L288-L300)
-- 现有清理代码：[local.py#L55-L71](../../manga_translator/mode/local.py#L55-L71)
+- 现有清理代码：[mode/local.py#L55-L71](../../manga_translator/mode/local.py#L55-L71)

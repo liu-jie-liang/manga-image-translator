@@ -185,8 +185,9 @@ class TestPromptAndParsing:
 class TestTranslateMethod:
     """_translate 方法行为"""
 
+    @pytest.mark.asyncio
     @patch('llama_cpp.Llama')
-    def test_translate_loads_model_if_needed(self, mock_llama, monkeypatch, tmp_path):
+    async def test_translate_loads_model_if_needed(self, mock_llama, monkeypatch, tmp_path):
         """如果模型未加载，_translate 先自动加载"""
         gguf_file = tmp_path / 'galtransl.gguf'
         gguf_file.write_text('fake')
@@ -200,16 +201,14 @@ class TestTranslateMethod:
         }
 
         translator = mod.GaltranslLocalTranslator()
-        import asyncio
-        result = asyncio.get_event_loop().run_until_complete(
-            translator._translate('JPN', 'CHS', ['こんにちは', 'さようなら'])
-        )
+        result = await translator._translate('JPN', 'CHS', ['こんにちは', 'さようなら'])
 
         assert result == ['你好', '再见']
         mock_llama.assert_called_once()
 
+    @pytest.mark.asyncio
     @patch('llama_cpp.Llama')
-    def test_translate_reuses_loaded_model(self, mock_llama, monkeypatch, tmp_path):
+    async def test_translate_reuses_loaded_model(self, mock_llama, monkeypatch, tmp_path):
         """已加载模型时 _translate 复用不重新加载"""
         gguf_file = tmp_path / 'galtransl.gguf'
         gguf_file.write_text('fake')
@@ -223,11 +222,9 @@ class TestTranslateMethod:
         }
 
         translator = mod.GaltranslLocalTranslator()
-        import asyncio
-        loop = asyncio.get_event_loop()
 
-        loop.run_until_complete(translator._translate('JPN', 'CHS', ['テスト']))
-        loop.run_until_complete(translator._translate('JPN', 'CHS', ['テスト2']))
+        await translator._translate('JPN', 'CHS', ['テスト'])
+        await translator._translate('JPN', 'CHS', ['テスト2'])
 
         assert mock_llama.call_count == 1
         assert mock_instance.create_chat_completion.call_count == 2
@@ -247,8 +244,9 @@ class TestTranslateMethod:
 class TestInferenceParams:
     """推理参数配置（Galtransl: temperature=0.3, top_p=0.8）"""
 
+    @pytest.mark.asyncio
     @patch('llama_cpp.Llama')
-    def test_galtransl_temperature_top_p(self, mock_llama, monkeypatch, tmp_path):
+    async def test_galtransl_temperature_top_p(self, mock_llama, monkeypatch, tmp_path):
         """Galtransl 默认 temperature=0.3, top_p=0.8"""
         gguf_file = tmp_path / 'galtransl.gguf'
         gguf_file.write_text('fake')
@@ -262,9 +260,7 @@ class TestInferenceParams:
         }
 
         translator = mod.GaltranslLocalTranslator()
-        import asyncio
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(translator._translate('JPN', 'CHS', ['テスト']))
+        await translator._translate('JPN', 'CHS', ['テスト'])
 
         call_kwargs = mock_instance.create_chat_completion.call_args[1]
         assert call_kwargs['temperature'] == 0.3

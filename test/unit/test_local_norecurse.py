@@ -6,6 +6,7 @@ Assertions:
 - Non-image files are skipped
 - .translate_progress.json is skipped
 - Empty directories don't cause errors
+- IMAGE_EXTS 常量包含所有常见格式
 """
 import os
 import json
@@ -14,6 +15,22 @@ import pytest
 from PIL import Image
 
 from manga_translator.mode.local import _get_image_files
+from manga_translator.batch_common import IMAGE_EXTS
+
+
+# ─── IMAGE_EXTS 常量 ───
+
+class TestImageExts:
+    def test_webp_supported(self):
+        """WEBP 格式在常量中。"""
+        assert '.webp' in IMAGE_EXTS
+
+    def test_all_common_formats(self):
+        """常见图片格式都在常量中。"""
+        assert '.png' in IMAGE_EXTS
+        assert '.jpg' in IMAGE_EXTS
+        assert '.jpeg' in IMAGE_EXTS
+        assert '.bmp' in IMAGE_EXTS
 
 
 def _create_test_image(path: str):

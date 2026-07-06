@@ -167,6 +167,9 @@ class CustomOpenAiTranslator(ConfigGPT, CommonTranslator):
             # Use regex to extract response 
             response=self.extract_capture_groups(response, rf"{self.rgx_capture}")
 
+            # extract_capture_groups 对空响应可能返回 None，防护 re.sub 崩溃
+            if not response:
+                response = ""
 
             # Sometimes it will return line like "<|9>demo", and we need to fix it.
             def add_pipe(match):

@@ -2,7 +2,7 @@
 
 ## 状态
 
-已提案 (Proposed)
+已实现 (Implemented)
 
 ## 背景
 

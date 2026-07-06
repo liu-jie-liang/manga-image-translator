@@ -7,12 +7,14 @@ Assertions:
 - _load_progress skips completed files in list
 - _clear_progress deletes the file
 - retrans flag clears progress
+- _clear_all_progress recursively clears progress files
 """
 import os
 import json
 import tempfile
 
 from manga_translator.mode.local import _load_progress, _save_progress, _clear_progress
+from manga_translator.batch_common import _clear_all_progress
 
 
 class TestProgressTracking:
@@ -147,3 +149,28 @@ class TestGetUncompletedFiles:
 
             result = self._get_uncompleted_files(tmpdir)
             assert result == ['page01.png', 'page02.png']
+
+
+# ─── 递归清理 ───
+
+class TestClearAllProgress:
+    def test_clears_recursively(self):
+        """递归清理所有子目录的进度文件。"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sub1 = os.path.join(tmpdir, 'sub1')
+            sub2 = os.path.join(tmpdir, 'sub1', 'sub2')
+            os.makedirs(sub2)
+
+            _save_progress(tmpdir, 'page01.png')
+            _save_progress(sub1, 'page02.png')
+            _save_progress(sub2, 'page03.png')
+
+            assert os.path.exists(os.path.join(tmpdir, '.translate_progress.json'))
+            assert os.path.exists(os.path.join(sub1, '.translate_progress.json'))
+            assert os.path.exists(os.path.join(sub2, '.translate_progress.json'))
+
+            _clear_all_progress(tmpdir)
+
+            assert not os.path.exists(os.path.join(tmpdir, '.translate_progress.json'))
+            assert not os.path.exists(os.path.join(sub1, '.translate_progress.json'))
+            assert not os.path.exists(os.path.join(sub2, '.translate_progress.json'))

@@ -9,6 +9,47 @@ TDD: Test directory sorting rules for batch translation.
 5. 其他 → 自然排序，排最后
 """
 from manga_translator.batch import sort_subdirs
+from manga_translator.batch_common import _sort_key_dir
+
+
+# ─── _sort_key_dir 内部函数 ───
+
+class TestSortKeyDir:
+    """目录排序键生成测试"""
+
+    def test_pure_digits(self):
+        """纯数字 → (0, int_value, '', name)"""
+        assert _sort_key_dir('10') == (0, 10, '', '10')
+        assert _sort_key_dir('001') == (0, 1, '', '001')
+
+    def test_digits_then_letters(self):
+        """数字+字母 → (1, int, letters, name)"""
+        key = _sort_key_dir('01a')
+        assert key[0] == 1
+        assert key[1] == 1
+        assert key[2] == 'a'
+
+    def test_letters_then_digits(self):
+        """字母+数字 → (2, letters, int, name)"""
+        key = _sort_key_dir('ch10')
+        assert key[0] == 2
+        assert key[1] == 'ch'
+        assert key[2] == 10
+
+    def test_pure_letters(self):
+        """纯字母 → (2, letters, 0, name)"""
+        key = _sort_key_dir('bonus')
+        assert key[0] == 2
+        assert key[1] == 'bonus'
+        assert key[2] == 0
+
+    def test_other(self):
+        """其他 → (3, 0, 0, name.lower())"""
+        key = _sort_key_dir('!meta')
+        assert key[0] == 3
+        assert key[1] == 0
+        assert key[2] == 0
+        assert key[3] == '!meta'
 
 
 # ─── 测试用例 ───
