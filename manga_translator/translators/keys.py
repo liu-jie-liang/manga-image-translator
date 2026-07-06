@@ -22,10 +22,11 @@ OPENAI_GLOSSARY_PATH = os.getenv('OPENAI_GLOSSARY_PATH', './dict/mit_glossary.tx
 OPENAI_API_BASE = os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1') #使用api-for-open-llm例子 http://127.0.0.1:8000/v1
 
 # sakura
-SAKURA_API_BASE = os.getenv('SAKURA_API_BASE', 'http://127.0.0.1:5000/v1') #SAKURA API地址
+SAKURA_API_BASE = os.getenv('SAKURA_API_BASE', 'http://localhost:11434/v1') #SAKURA API地址
 SAKURA_VERSION = os.getenv('SAKURA_VERSION', '0.9') #SAKURA API版本，可选值：0.9、0.10，选择0.10则会加载术语表。
 SAKURA_DICT_PATH = os.getenv('SAKURA_DICT_PATH', './dict/sakura_dict.txt') #SAKURA 术语表路径
-SAKURA_MODEL = os.getenv('SAKURA_MODEL', 'sukinishiro') #SAKURA模型名，使用Ollama时设为 sakura-14b-qwen2.5-v1.0:latest
+SAKURA_MODEL = os.getenv('SAKURA_MODEL', 'sakura-14b-qwen2.5-v1.0') #SAKURA模型名，使用Ollama时设为 sakura-14b-qwen2.5-v1.0:latest
+SAKURA_API_KEY = os.getenv('SAKURA_API_KEY', '') # Sakura API密钥，Ollama部署无需设置
 SAKURA_GGUF_PATH = os.getenv('SAKURA_GGUF_PATH') #Sakura 本地 GGUF 模型路径，设置后自动切换本地 GPU 直连推理
 
 

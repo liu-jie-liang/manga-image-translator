@@ -9,7 +9,7 @@
 
 | 对比维度 | 原项目 | 本项目 |
 |---------|--------|--------|
-| **翻译方式** | 需搭 Ollama 服务，HTTP 转发损耗 | GGUF 直连 GPU，跳过网络层，速度 +15% |
+| **翻译方式** | 需搭 Ollama 服务，HTTP 转发损耗 | GGUF 直连 GPU，跳过网络层，翻译阶段零网络延迟，详见[性能实测报告](./docs/日中翻译-性能实测报告.md) |
 | **批量处理** | 每次手动指定单目录 | 自动扫描全部子目录，排序、翻译、输出一气呵成 |
 | **断点续传** | 不支持，中断后重来 | 自动记录进度，续传只翻新图，已有页面秒级跳过 |
 | **R18 内容** | API 层可能被审查，返回空白 | 内置越狱 prompt，直接翻译不过滤 |
@@ -25,9 +25,9 @@
 
 | 我有什么 | 推荐模型 | 特点 | 速度 |
 |---------|---------|------|------|
-| 一般向日本漫画 | **Sakura Qwen2.5** | 日→中精度最高，GGUF 本地推理 | 约 8.7 秒/页 |
-| R18 / 成人向日本漫画 | **Galtransl 14B** | 专为 Galgame 优化，无审查 | 约 8.8 秒/页 |
-| 韩国漫画（webtoon） | **Qwen3 14B** | 韩→中翻译，Ollama 运行 | 约 6.8 秒/页 |
+| 一般向日本漫画 | **Sakura Qwen2.5** | 日→中精度最高，GGUF 本地推理 | 详见[性能实测报告](./docs/日中翻译-性能实测报告.md) |
+| R18 / 成人向日本漫画 | **Galtransl 14B** | 专为 Galgame 优化，无审查 | 详见[性能实测报告](./docs/日中翻译-性能实测报告.md) |
+| 韩国漫画（webtoon） | **Qwen3 14B** | 韩→中翻译，Ollama 运行 | 详见[性能实测报告](./docs/韩中翻译-性能实测报告.md) |
 
 > **降级保障**：选择 Sakura Qwen2.5 时，如果 GGUF 模型未找到，会自动降级到本地 Ollama 服务——不会直接报错。
 
@@ -36,7 +36,7 @@
 | 你的选择 | 最低配置 | 推荐配置 | 需下载的模型（大小） |
 |---------|---------|---------|---------------------|
 | Sakura Qwen2.5 | 16GB 内存, 8GB 显存 | 32GB 内存, 16GB 统一内存 (M2 Pro+) | [sakura-14b-qwen2.5-v1.0-q4_k_m.gguf](https://huggingface.co/SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF) (~8.5GB) |
-| Galtransl 14B | 16GB 内存, 8GB 显存 | 32GB 内存, 16GB 统一内存 | [Sakura-Galtransl-14B-v3.8.gguf](https://huggingface.co/SakuraLLM/Sakura-GalTransl-14B-v3.8) (~8.5GB) |
+| Galtransl 14B | 16GB 内存, 8GB 显存 | 32GB 内存, 16GB 统一内存 | [Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf](https://huggingface.co/SakuraLLM/Sakura-GalTransl-14B-v3.8) (~8.5GB) |
 | Qwen3 14B (韩中) | 16GB 内存 | 32GB 内存 | `ollama pull qwen3:14b-q4_k_m` (~8.5GB) |
 
 **操作系统**：macOS 14+ (Apple Silicon) / Ubuntu 22.04+ / Windows 10+ (NVIDIA GPU)  
@@ -73,8 +73,8 @@ curl -L -o ~/.ollama/models/gguf/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf \
   "https://huggingface.co/SakuraLLM/Sakura-14B-Qwen2.5-v1.0-GGUF/resolve/main/sakura-14b-qwen2.5-v1.0-q4_k_m.gguf"
 
 # Galtransl (R18):
-curl -L -o ~/.ollama/models/gguf/Sakura-Galtransl-14B-v3.8.gguf \
-  "https://huggingface.co/SakuraLLM/Sakura-GalTransl-14B-v3.8/resolve/main/Sakura-Galtransl-14B-v3.8.gguf"
+curl -L -o ~/.ollama/models/gguf/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf \
+  "https://huggingface.co/SakuraLLM/Sakura-GalTransl-14B-v3.8/resolve/main/Sakura-Galtransl-14B-v3.8-Q4_K_M.gguf"
 
 # 6. 验证
 python -c "from manga_translator import MangaTranslator; print('安装成功')"
@@ -189,7 +189,7 @@ manga-image-translator/
 |------|---------------|----------------|
 | 一般向漫画 | 术语准确，语气自然 | 同左，略偏口语化 |
 | R18 内容 | 越狱后可翻译，偶有生硬 | 原生支持，流畅自然 |
-| 速度 | 8.7 秒/页 | 8.8 秒/页 |
+| 速度 | 详见[性能实测报告](./docs/日中翻译-性能实测报告.md) | 详见[性能实测报告](./docs/日中翻译-性能实测报告.md) |
 | 成功率 | 100% (12/12) | 100% (12/12) |
 
 两种模型速度几乎一致，Galtransl 的 R18 翻译质量明显更好。
